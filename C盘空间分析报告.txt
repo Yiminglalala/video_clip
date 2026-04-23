@@ -1,0 +1,98 @@
+
+========================================
+        C盘空间分析和清理报告
+========================================
+
+一、C盘空间总体状况
+----------------------------------------
+- 总容量: 200 GB
+- 已使用: 159.53 GB
+- 剩余: 40.48 GB
+
+二、主要文件夹占用情况
+----------------------------------------
+1. C:\Windows - 34.78 GB (系统文件夹，不建议删除)
+2. C:\Users - 25.98 GB (用户数据)
+   - C:\Users\YIMING - 25.98 GB
+     - .cache - 17.68 GB (缓存文件)
+     - Documents - 4.59 GB
+     - WorkBuddy - 1.15 GB
+     - .chromium-browser-snapshots - 0.72 GB
+     - .workbuddy - 0.58 GB
+     - Desktop - 0.37 GB
+     - .codex - 0.3 GB
+     - Downloads - 0.23 GB
+3. C:\Program Files (x86) - 8.68 GB
+4. C:\Program Files - 4.56 GB
+
+三、发现的大文件 (>500MB)
+----------------------------------------
+1. model-00001-of-00002.safetensors - 3.93 GB (HuggingFace模型)
+2. model.safetensors - 1.75 GB (HuggingFace模型)
+3. large-v3-turbo.pt - 1.51 GB (Whisper模型)
+4. medium.pt - 1.42 GB (Whisper模型)
+5. 多个其他AI模型文件
+
+四、可安全删除的文件类型
+----------------------------------------
+1. 临时文件 (预计可释放约 2.39 GB+)
+   - C:\Users\YIMING\AppData\Local\Temp
+   - C:\Windows\Temp
+
+2. 浏览器缓存
+   - Chrome/Edge缓存文件
+
+3. Windows更新缓存
+   - C:\Windows\SoftwareDistribution\Download
+
+4. 预读取文件
+   - C:\Windows\Prefetch
+
+5. 缩略图缓存
+   - C:\Users\YIMING\AppData\Local\Microsoft\Windows\Explorer
+
+6. 回收站
+   - C:\$Recycle.Bin
+
+7. .cache 文件夹中的AI模型
+   - 注意：这些文件可以删除，但下次使用时需要重新下载
+
+五、安全清理操作指南
+----------------------------------------
+
+方法1: 使用提供的PowerShell脚本
+1. 打开PowerShell (管理员权限)
+2. 进入目录: cd d:\video_clip
+3. 运行脚本: .\clean_c_drive.ps1
+4. 按提示操作
+
+方法2: 手动清理
+1. 临时文件
+   - 按 Win+R，输入 %temp%，删除所有文件
+   - 按 Win+R，输入 C:\Windows\Temp，删除所有文件
+
+2. 磁盘清理
+   - 右键C盘 -> 属性 -> 磁盘清理
+   - 勾选需要清理的项目 -> 确定
+
+3. 清理回收站
+   - 右键回收站 -> 清空回收站
+
+4. 清理AI模型缓存 (可选)
+   - 位置: C:\Users\YIMING\.cache
+   - 可删除: huggingface、whisper、modelscope 等文件夹
+   - 注意：下次使用时需要重新下载模型
+
+六、注意事项
+----------------------------------------
+- 删除前请确认文件不需要
+- 系统文件 (C:\Windows) 不要手动删除
+- AI模型文件删除后需要重新下载
+- 建议先运行脚本查看可释放空间，确认后再执行删除
+- 重要文件请先备份
+
+七、已创建的工具
+----------------------------------------
+- clean_c_drive.ps1 - 自动清理脚本
+
+========================================

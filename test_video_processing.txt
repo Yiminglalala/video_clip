@@ -1,0 +1,217 @@
+2026-04-17 14:49:46,902 - __main__ - INFO - ================================================================================
+2026-04-17 14:49:46,902 - __main__ - INFO - 完整视频处理测试开始
+2026-04-17 14:49:46,902 - __main__ - INFO - ================================================================================
+2026-04-17 14:49:46,903 - __main__ - INFO - 测试视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4
+2026-04-17 14:49:49,457 - src.audio_analyzer - INFO - Pedalboard 未安装
+2026-04-17 14:49:49,458 - src.audio_analyzer - INFO - Demucs 未安装，人声分离功能将跳过（pip install demucs）
+2026-04-17 14:49:49,524 - __main__ - INFO - 创建 LiveVideoProcessor...
+2026-04-17 14:49:49,572 - src.audio_analyzer - WARNING - Silero VAD 已禁用：torchaudio=2.11.0+cu128 uses torchcodec on Windows; disabled by default
+2026-04-17 14:49:49,602 - src.ffmpeg_processor - INFO - FFmpeg 版本: ffmpeg version 8.0.1-full_build-www.gyan.dev Copyright (c) 2000-2025 the FFmpeg developers
+2026-04-17 14:49:49,602 - __main__ - INFO - 检查 SongFormerAnalyzer...
+2026-04-17 14:49:49,620 - src.processor - INFO - SongFormer 已加载 (device=cuda, window=60s, hop=30s)
+2026-04-17 14:49:49,620 - __main__ - INFO -   - device: cuda
+2026-04-17 14:49:49,620 - __main__ - INFO -   - window_sec: 60
+2026-04-17 14:49:49,620 - __main__ - INFO -   - models_loaded: False
+2026-04-17 14:49:49,620 - __main__ - INFO - 开始视频处理...
+2026-04-17 14:49:49,620 - __main__ - ERROR - 视频处理失败: LiveVideoProcessor.process_video() got an unexpected keyword argument 'output_subdir'
+2026-04-17 14:49:49,621 - __main__ - ERROR - Traceback (most recent call last):
+  File "D:\video_clip\test_video_processing.py", line 69, in test_full_video_processing
+    result = processor.process_video(
+TypeError: LiveVideoProcessor.process_video() got an unexpected keyword argument 'output_subdir'
+
+2026-04-17 14:49:49,621 - __main__ - INFO - ================================================================================
+2026-04-17 14:49:49,622 - __main__ - ERROR - ❌ 视频处理测试失败
+2026-04-17 14:49:49,622 - __main__ - INFO - ================================================================================
+2026-04-17 14:50:19,317 - __main__ - INFO - ================================================================================
+2026-04-17 14:50:19,317 - __main__ - INFO - 完整视频处理测试开始
+2026-04-17 14:50:19,317 - __main__ - INFO - ================================================================================
+2026-04-17 14:50:19,317 - __main__ - INFO - 测试视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4
+2026-04-17 14:50:21,759 - src.audio_analyzer - INFO - Pedalboard 未安装
+2026-04-17 14:50:21,761 - src.audio_analyzer - INFO - Demucs 未安装，人声分离功能将跳过（pip install demucs）
+2026-04-17 14:50:21,830 - __main__ - INFO - 创建 LiveVideoProcessor...
+2026-04-17 14:50:21,880 - src.audio_analyzer - WARNING - Silero VAD 已禁用：torchaudio=2.11.0+cu128 uses torchcodec on Windows; disabled by default
+2026-04-17 14:50:21,910 - src.ffmpeg_processor - INFO - FFmpeg 版本: ffmpeg version 8.0.1-full_build-www.gyan.dev Copyright (c) 2000-2025 the FFmpeg developers
+2026-04-17 14:50:21,911 - __main__ - INFO - 检查 SongFormerAnalyzer...
+2026-04-17 14:50:21,928 - src.processor - INFO - SongFormer 已加载 (device=cuda, window=60s, hop=30s)
+2026-04-17 14:50:21,928 - __main__ - INFO -   - device: cuda
+2026-04-17 14:50:21,928 - __main__ - INFO -   - window_sec: 60
+2026-04-17 14:50:21,928 - __main__ - INFO -   - models_loaded: False
+2026-04-17 14:50:21,929 - __main__ - INFO - 开始视频处理...
+2026-04-17 14:50:21,929 - src.processor - INFO - 开始处理视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4
+2026-04-17 14:50:21,929 - src.processor - INFO - 识别歌手: 周深
+2026-04-17 14:50:21,929 - __main__ - INFO - 进度: 1.0% - 正在检查输入视频...
+2026-04-17 14:50:21,929 - __main__ - INFO - 进度: 5.0% - 正在提取音频...
+2026-04-17 14:50:21,931 - src.ffmpeg_processor - INFO - 开始提取音频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4 -> C:\Users\YIMING\AppData\Local\Temp\tmpi3dmtaet.wav
+2026-04-17 14:50:22,164 - src.ffmpeg_processor - INFO - 音频提取完成: C:\Users\YIMING\AppData\Local\Temp\tmpi3dmtaet.wav
+2026-04-17 14:50:22,164 - src.processor - INFO - 音频提取完成: C:\Users\YIMING\AppData\Local\Temp\tmpi3dmtaet.wav
+2026-04-17 14:50:22,164 - __main__ - INFO - 进度: 10.0% - 检测视频边界（OCR标题画面）...
+2026-04-17 14:50:22,172 - src.processor - WARNING - 文字检测器未安装: No module named 'cv2'
+2026-04-17 14:50:22,173 - src.processor - INFO - 视频边界（标题画面）: 0个 -> []
+2026-04-17 14:50:22,173 - __main__ - INFO - 进度: 15.0% - 检测音频边界（能量谷值）...
+2026-04-17 14:50:22,173 - src.processor - INFO - 开始 _detect_audio_boundaries...
+2026-04-17 14:50:22,215 - src.processor - INFO - 音频加载成功 (soundfile)，时长: 147.54秒
+2026-04-17 14:50:22,215 - __main__ - INFO - 进度: 15.2% - 计算能量包络...
+2026-04-17 14:50:23,881 - __main__ - INFO - 进度: 15.5% - 检测掌声区域...
+2026-04-17 14:50:24,238 - src.audio_analyzer - INFO - 检测到 1 个掌声区域
+2026-04-17 14:50:24,238 - __main__ - INFO - 进度: 15.8% - 计算频谱质心...
+2026-04-17 14:50:24,339 - __main__ - INFO - 进度: 16.2% - 计算MFCC特征...
+2026-04-17 14:50:24,489 - __main__ - INFO - 进度: 16.8% - 计算节拍强度...
+2026-04-17 14:50:24,556 - __main__ - INFO - 进度: 17.2% - 计算Chroma跳变...
+2026-04-17 14:50:25,294 - __main__ - INFO - 进度: 17.8% - 计算观众情绪变化...
+2026-04-17 14:50:25,294 - __main__ - INFO - 进度: 18.2% - 计算综合边界得分...
+2026-04-17 14:50:25,303 - __main__ - INFO - 进度: 19.0% - 寻找峰值...
+2026-04-17 14:50:25,372 - src.audio_analyzer - INFO - 歌曲边界: 76.8s (得分: 9.69, 置信: medium)
+2026-04-17 14:50:25,372 - src.audio_analyzer - INFO - 歌曲边界: 116.1s (得分: 4.26, 置信: high)
+2026-04-17 14:50:25,372 - __main__ - INFO - 进度: 20.0% - 检测到 2 个歌曲边界
+2026-04-17 14:50:25,372 - src.audio_analyzer - INFO - 最终边界: ['76.8s', '116.1s']
+2026-04-17 14:50:25,373 - src.processor - INFO - detect_boundaries 完成，检测到 2 个边界
+2026-04-17 14:50:25,373 - src.processor - INFO - 音频检测到 1 个能量谷值边界
+2026-04-17 14:50:25,373 - src.processor - INFO - 音频边界（能量谷值）: 1个 -> [np.float64(76.76517006802722)]
+2026-04-17 14:50:25,373 - __main__ - INFO - 进度: 22.0% - MSAF音乐结构分析...
+2026-04-17 14:50:26,642 - src.processor - INFO - [MSAF] Starting music structure analysis...
+2026-04-17 14:50:44,547 - src.processor - WARNING - [MSAF] Analysis failed: module 'psutil' has no attribute 'Process'
+2026-04-17 14:50:44,548 - src.processor - INFO - MSAF 边界（结构分析）: 0个 -> []
+2026-04-17 14:50:44,548 - __main__ - INFO - 进度: 30.0% - 合并边界确定歌曲...
+2026-04-17 14:50:44,592 - src.processor - INFO - 合并后歌曲边界: 2首 -> [(0.0, np.float64(76.76517006802722)), (np.float64(76.76517006802722), 147.538141)]
+2026-04-17 14:50:44,592 - src.processor - INFO - 准备调用 _create_songs...
+2026-04-17 14:50:44,666 - src.processor - INFO - 分析歌曲 1: 0.0s - 76.8s (时长 76.8s)
+2026-04-17 14:50:44,666 - __main__ - INFO - 进度: 30.0% - [1/2] 分析: 0s - 77s ...
+2026-04-17 14:50:45,216 - __main__ - INFO - 进度: 33.0% - [1/2] SongFormer GPU推理 (0:00, ~77s) ...
+2026-04-17 14:50:49,971 - src.songformer_analyzer - INFO - [SongFormer] 加载 MuQ...
+2026-04-17 14:50:50,708 - httpx - INFO - HTTP Request: HEAD https://hf-mirror.com/OpenMuQ/MuQ-large-msd-iter/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-17 14:50:50,894 - httpx - INFO - HTTP Request: HEAD https://hf-mirror.com/api/resolve-cache/models/OpenMuQ/MuQ-large-msd-iter/0562a57814f6f8bbd9fdea0a25921a2fce1a841a/config.json "HTTP/1.1 200 OK"
+2026-04-17 14:50:52,799 - httpx - INFO - HTTP Request: HEAD https://hf-mirror.com/OpenMuQ/MuQ-large-msd-iter/resolve/main/model.safetensors "HTTP/1.1 302 Found"
+2026-04-17 14:50:53,699 - src.songformer_analyzer - INFO - [SongFormer] MuQ 加载完成 (3.7秒)
+2026-04-17 14:50:53,699 - src.songformer_analyzer - INFO - [SongFormer] 加载 MusicFM...
+2026-04-17 14:50:54,171 - httpx - INFO - HTTP Request: HEAD https://hf-mirror.com/facebook/wav2vec2-conformer-rope-large-960h-ft/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-17 14:50:54,343 - httpx - INFO - HTTP Request: HEAD https://hf-mirror.com/api/resolve-cache/models/facebook/wav2vec2-conformer-rope-large-960h-ft/6b36ef01c6443c67ae7ed0822876d091ab50e4aa/config.json "HTTP/1.1 200 OK"
+2026-04-17 14:50:56,425 - src.songformer_analyzer - INFO - [SongFormer] MusicFM 加载完成 (2.7秒)
+2026-04-17 14:50:56,425 - src.songformer_analyzer - INFO - [SongFormer] 加载 SongFormer...
+2026-04-17 14:50:56,618 - src.songformer_analyzer - INFO - [SongFormer] SongFormer 加载完成 (0.2秒)
+2026-04-17 14:50:56,618 - src.songformer_analyzer - INFO - [SongFormer] GPU: NVIDIA GeForce RTX 5060 Ti
+2026-04-17 14:50:56,638 - src.songformer_analyzer - INFO - [SongFormer DIAG-AUDIO] samples=1842365, dtype=float32, min=-0.626498, max=0.625352, mean=0.000007, std=0.069890
+2026-04-17 14:50:56,638 - src.songformer_analyzer - INFO - [SongFormer] 音频(数组): 76.8s, 采样率=24000
+2026-04-17 14:50:56,641 - src.songformer_analyzer - INFO - [SongFormer] 开始推理 (window=60s, hop=30s)...
+2026-04-17 14:50:56,664 - src.songformer_analyzer - INFO - [SongFormer DIAG-TENSOR] audio_dev: min=-0.112721, max=0.118825, mean=0.000220
+2026-04-17 14:50:58,084 - src.songformer_analyzer - INFO - [SongFormer DIAG-RAW] Window 0 raw output:
+2026-04-17 14:50:58,084 - src.songformer_analyzer - INFO -   function_logits: shape=(1, 500, 128), min=-inf, max=8.9827
+2026-04-17 14:50:58,085 - src.songformer_analyzer - INFO -   boundary_logits: shape=(1, 500), min=-7.3001, max=3.3686, mean=-5.9131
+2026-04-17 14:50:58,085 - src.songformer_analyzer - INFO -   boundary_logits non-zero count: 500/1
+2026-04-17 14:50:58,085 - src.songformer_analyzer - INFO -   窗口 1: 1.4秒 (累计)
+2026-04-17 14:50:59,188 - src.songformer_analyzer - INFO - [SongFormer] 推理完成 (2.5秒)
+2026-04-17 14:50:59,188 - src.songformer_analyzer - INFO - [SongFormer] logits shape: function=(638, 128), boundary=(638,)
+2026-04-17 14:50:59,189 - src.songformer_analyzer - INFO - [SongFormer DIAG] Raw label probabilities per 60s window:
+2026-04-17 14:50:59,189 - src.songformer_analyzer - INFO -   [0m00s-1m00s] intro:0.37, silence:0.34, verse:0.15
+2026-04-17 14:50:59,189 - src.songformer_analyzer - INFO -   [1m00s-2m00s] verse:0.40, intro:0.38, inst:0.07
+2026-04-17 14:50:59,189 - src.songformer_analyzer - INFO - [SongFormer DIAG-POST] bound_final: shape=(638,), min=-7.2802, max=3.3686, mean=-5.6573
+2026-04-17 14:50:59,190 - src.songformer_analyzer - INFO - [SongFormer DIAG-POST] sigmoid(boundary): min=0.0007, max=0.9667, mean=0.0434
+2026-04-17 14:50:59,193 - src.songformer_analyzer - INFO - [SongFormer] 原始分段: 6 段
+2026-04-17 14:50:59,193 - src.songformer_analyzer - INFO - [SongFormer] 规则后处理后: 4 段
+2026-04-17 14:50:59,194 - SongFormer.REMAP - INFO - [SongFormer REMAP] 能量: mean=5.7227, p25=4.7191, p75=6.7954
+2026-04-17 14:50:59,194 - SongFormer.REMAP - INFO - [SongFormer REMAP] 原始: verse=2, chorus=1, pre-chorus=0, bridge=0, outro=0, inst=0, intro=1
+2026-04-17 14:50:59,194 - SongFormer.REMAP - INFO - [SongFormer REMAP] outro: [49s-76s] chorus -> outro (e=0.99, pos=0.65)
+2026-04-17 14:50:59,194 - SongFormer.REMAP - INFO - [SongFormer REMAP] 完成
+2026-04-17 14:50:59,194 - src.songformer_analyzer - INFO - [SongFormer] 声学重映射后: 4 段
+2026-04-17 14:50:59,195 - src.songformer_analyzer - INFO - [SongFormer] 合并后: 3 段
+2026-04-17 14:50:59,197 - src.songformer_analyzer - INFO - [SongFormer] 总耗时: 2.6秒
+2026-04-17 14:50:59,198 - src.songformer_analyzer - INFO - [SongFormer] 分析完成: 3 段
+2026-04-17 14:50:59,198 - src.songformer_analyzer - INFO -   [    0.0s -    24.6s] ( 24.6s) 前奏 (intro)
+2026-04-17 14:50:59,198 - src.songformer_analyzer - INFO -   [   24.6s -    49.8s] ( 25.2s) 主歌 (verse)
+2026-04-17 14:50:59,198 - src.songformer_analyzer - INFO -   [   49.8s -    76.6s] ( 26.8s) 尾奏 (outro)
+2026-04-17 14:50:59,199 - src.audio_analyzer - INFO - [动态归一化] rms: p10=0.0154 p15=0.0000 p50=0.0762 p90=0.1909  zcr_mean=0.0000  centroid_mean=0Hz  flatness_mean=0.0000
+2026-04-17 14:51:02,266 - src.processor - INFO - [SongFormer] 分析完成: 3 段
+2026-04-17 14:51:02,266 - src.processor - INFO -   [    0.0s -    24.6s] ( 24.6s) 前奏 (conf=12.75)
+2026-04-17 14:51:02,266 - src.processor - INFO -   [   24.6s -    49.8s] ( 25.2s) speech (conf=19.00)
+2026-04-17 14:51:02,266 - src.processor - INFO -   [   49.8s -    76.6s] ( 26.8s) 尾奏 (conf=8.75)
+2026-04-17 14:51:02,267 - __main__ - INFO - 进度: 40.0% - [1/2] Song_01 完成 (3段)
+2026-04-17 14:51:02,267 - src.processor - INFO - 分析歌曲 2: 76.8s - 147.5s (时长 70.8s)
+2026-04-17 14:51:02,267 - __main__ - INFO - 进度: 40.0% - [2/2] 分析: 77s - 148s ...
+2026-04-17 14:51:02,639 - __main__ - INFO - 进度: 43.0% - [2/2] SongFormer GPU推理 (1:16, ~71s) ...
+2026-04-17 14:51:02,667 - src.songformer_analyzer - INFO - [SongFormer DIAG-AUDIO] samples=1698552, dtype=float32, min=-0.714917, max=0.716557, mean=0.000002, std=0.146681
+2026-04-17 14:51:02,668 - src.songformer_analyzer - INFO - [SongFormer] 音频(数组): 70.8s, 采样率=24000
+2026-04-17 14:51:02,671 - src.songformer_analyzer - INFO - [SongFormer] 开始推理 (window=60s, hop=30s)...
+2026-04-17 14:51:02,673 - src.songformer_analyzer - INFO - [SongFormer DIAG-TENSOR] audio_dev: min=-0.220624, max=0.218781, mean=0.000224
+2026-04-17 14:51:03,697 - src.songformer_analyzer - INFO - [SongFormer DIAG-RAW] Window 0 raw output:
+2026-04-17 14:51:03,699 - src.songformer_analyzer - INFO -   function_logits: shape=(1, 500, 128), min=-inf, max=7.4031
+2026-04-17 14:51:03,699 - src.songformer_analyzer - INFO -   boundary_logits: shape=(1, 500), min=-7.2482, max=1.0860, mean=-5.5172
+2026-04-17 14:51:03,699 - src.songformer_analyzer - INFO -   boundary_logits non-zero count: 500/1
+2026-04-17 14:51:03,699 - src.songformer_analyzer - INFO -   窗口 1: 1.0秒 (累计)
+2026-04-17 14:51:04,581 - src.songformer_analyzer - INFO - [SongFormer] 推理完成 (1.9秒)
+2026-04-17 14:51:04,581 - src.songformer_analyzer - INFO - [SongFormer] logits shape: function=(589, 128), boundary=(589,)
+2026-04-17 14:51:04,581 - src.songformer_analyzer - INFO - [SongFormer DIAG] Raw label probabilities per 60s window:
+2026-04-17 14:51:04,582 - src.songformer_analyzer - INFO -   [0m00s-1m00s] intro:0.47, verse:0.36
+2026-04-17 14:51:04,582 - src.songformer_analyzer - INFO -   [1m00s-2m00s] intro:0.29, verse:0.23, bridge:0.21
+2026-04-17 14:51:04,582 - src.songformer_analyzer - INFO - [SongFormer DIAG-POST] bound_final: shape=(589,), min=-7.2482, max=1.0860, mean=-5.2341
+2026-04-17 14:51:04,583 - src.songformer_analyzer - INFO - [SongFormer DIAG-POST] sigmoid(boundary): min=0.0007, max=0.7476, mean=0.0440
+2026-04-17 14:51:04,584 - src.songformer_analyzer - INFO - [SongFormer] 原始分段: 5 段
+2026-04-17 14:51:04,584 - src.songformer_analyzer - INFO - [SongFormer] 规则后处理后: 1 段
+2026-04-17 14:51:04,584 - src.songformer_analyzer - INFO - [SongFormer] 声学重映射后: 1 段
+2026-04-17 14:51:04,584 - src.songformer_analyzer - INFO - [SongFormer] 合并后: 1 段
+2026-04-17 14:51:04,585 - src.songformer_analyzer - INFO - [SongFormer] 总耗时: 1.9秒
+2026-04-17 14:51:04,585 - src.songformer_analyzer - INFO - [SongFormer] 分析完成: 1 段
+2026-04-17 14:51:04,585 - src.songformer_analyzer - INFO -   [    0.0s -    70.7s] ( 70.7s) 主歌 (verse)
+2026-04-17 14:51:04,586 - src.audio_analyzer - INFO - [动态归一化] rms: p10=0.0154 p15=0.0000 p50=0.0762 p90=0.1909  zcr_mean=0.0000  centroid_mean=0Hz  flatness_mean=0.0000
+2026-04-17 14:51:07,564 - src.processor - INFO - [SongFormer] 分析完成: 1 段
+2026-04-17 14:51:07,564 - src.processor - INFO -   [   76.8s -   147.4s] ( 70.7s) 主歌 (conf=11.00)
+2026-04-17 14:51:07,565 - __main__ - INFO - 进度: 50.0% - [2/2] Song_02 完成 (1段)
+2026-04-17 14:51:07,565 - __main__ - INFO - 进度: 50.0% - [识曲 1/2] 正在识别歌曲名...
+2026-04-17 14:51:08,706 - src.processor - INFO - [Doubao] 识别歌词: 眼中浮沉手中残红那故事般...
+2026-04-17 14:51:08,708 - __main__ - INFO - 进度: 50.0% - [识曲 2/2] 正在识别歌曲名...
+2026-04-17 14:51:09,494 - src.processor - INFO - [Doubao] 识别歌词: 等你我我在等这一佛徒魂图佛渡我...
+2026-04-17 14:51:10,040 - src.processor - INFO - _create_songs 完成，创建了 1 首歌曲
+2026-04-17 14:51:10,041 - __main__ - INFO - 进度: 50.0% - 处理段落并输出...
+2026-04-17 14:51:10,574 - src.ffmpeg_processor - INFO - 开始切割视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4 [0.0s - 12.3s] mode=fast -> D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_001.mp4
+2026-04-17 14:51:12,870 - src.ffmpeg_processor - INFO - 视频切割完成: D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_001.mp4 (mode=fast, encoder=nvenc)
+2026-04-17 14:51:15,635 - src.processor - INFO - [export] 20260417_未知歌曲_主歌_001.mp4 | song=未知歌曲 | type=主歌 | highlight=False | 0.00s-12.30s
+2026-04-17 14:51:15,635 - __main__ - INFO - 进度: 54.5% - 处理: 未知歌曲 - 主歌
+2026-04-17 14:51:15,636 - src.ffmpeg_processor - INFO - 开始切割视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4 [12.3s - 24.6s] mode=fast -> D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_002.mp4
+2026-04-17 14:51:17,876 - src.ffmpeg_processor - INFO - 视频切割完成: D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_002.mp4 (mode=fast, encoder=nvenc)
+2026-04-17 14:51:18,787 - src.processor - WARNING - [Doubao] subtitle failed for 20260417_未知歌曲_主歌_002.mp4: 没有可用的识别文本
+2026-04-17 14:51:18,787 - src.processor - INFO - [export] 20260417_未知歌曲_主歌_002.mp4 | song=未知歌曲 | type=主歌 | highlight=False | 12.30s-24.60s
+2026-04-17 14:51:18,787 - __main__ - INFO - 进度: 59.1% - 处理: 未知歌曲 - 主歌
+2026-04-17 14:51:18,788 - src.ffmpeg_processor - INFO - 开始切割视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4 [24.6s - 37.2s] mode=fast -> D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_讲话串场_001.mp4
+2026-04-17 14:51:21,013 - src.ffmpeg_processor - INFO - 视频切割完成: D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_讲话串场_001.mp4 (mode=fast, encoder=nvenc)
+2026-04-17 14:51:23,492 - src.processor - INFO - [export] 20260417_未知歌曲_讲话串场_001.mp4 | song=未知歌曲 | type=讲话串场 | highlight=False | 24.60s-37.20s
+2026-04-17 14:51:23,492 - __main__ - INFO - 进度: 63.6% - 处理: 未知歌曲 - 讲话串场
+2026-04-17 14:51:23,493 - src.ffmpeg_processor - INFO - 开始切割视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4 [37.2s - 49.8s] mode=fast -> D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_讲话串场_002.mp4
+2026-04-17 14:51:25,687 - src.ffmpeg_processor - INFO - 视频切割完成: D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_讲话串场_002.mp4 (mode=fast, encoder=nvenc)
+2026-04-17 14:51:28,142 - src.processor - INFO - [export] 20260417_未知歌曲_讲话串场_002.mp4 | song=未知歌曲 | type=讲话串场 | highlight=False | 37.20s-49.80s
+2026-04-17 14:51:28,142 - __main__ - INFO - 进度: 68.2% - 处理: 未知歌曲 - 讲话串场
+2026-04-17 14:51:28,143 - src.ffmpeg_processor - INFO - 开始切割视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4 [49.8s - 63.18s] mode=fast -> D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_003.mp4
+2026-04-17 14:51:30,553 - src.ffmpeg_processor - INFO - 视频切割完成: D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_003.mp4 (mode=fast, encoder=nvenc)
+2026-04-17 14:51:33,123 - src.processor - INFO - [export] 20260417_未知歌曲_主歌_003.mp4 | song=未知歌曲 | type=主歌 | highlight=True | 49.80s-63.18s
+2026-04-17 14:51:33,123 - __main__ - INFO - 进度: 72.7% - 处理: 未知歌曲 - 主歌
+2026-04-17 14:51:33,123 - src.ffmpeg_processor - INFO - 开始切割视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4 [63.18s - 76.56s] mode=fast -> D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_004.mp4
+2026-04-17 14:51:35,542 - src.ffmpeg_processor - INFO - 视频切割完成: D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_004.mp4 (mode=fast, encoder=nvenc)
+2026-04-17 14:51:38,148 - src.processor - INFO - [export] 20260417_未知歌曲_主歌_004.mp4 | song=未知歌曲 | type=主歌 | highlight=True | 63.18s-76.56s
+2026-04-17 14:51:38,148 - __main__ - INFO - 进度: 77.3% - 处理: 未知歌曲 - 主歌
+2026-04-17 14:51:38,148 - src.ffmpeg_processor - INFO - 开始切割视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4 [76.77s - 90.906s] mode=fast -> D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_005.mp4
+2026-04-17 14:51:40,680 - src.ffmpeg_processor - INFO - 视频切割完成: D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_005.mp4 (mode=fast, encoder=nvenc)
+2026-04-17 14:51:43,459 - src.processor - INFO - [export] 20260417_未知歌曲_主歌_005.mp4 | song=未知歌曲 | type=主歌 | highlight=True | 76.77s-90.91s
+2026-04-17 14:51:43,459 - __main__ - INFO - 进度: 81.8% - 处理: 未知歌曲 - 主歌
+2026-04-17 14:51:43,460 - src.ffmpeg_processor - INFO - 开始切割视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4 [90.906s - 105.042s] mode=fast -> D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_006.mp4
+2026-04-17 14:51:46,071 - src.ffmpeg_processor - INFO - 视频切割完成: D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_006.mp4 (mode=fast, encoder=nvenc)
+2026-04-17 14:51:48,811 - src.processor - INFO - [export] 20260417_未知歌曲_主歌_006.mp4 | song=未知歌曲 | type=主歌 | highlight=True | 90.91s-105.04s
+2026-04-17 14:51:48,812 - __main__ - INFO - 进度: 86.4% - 处理: 未知歌曲 - 主歌
+2026-04-17 14:51:48,812 - src.ffmpeg_processor - INFO - 开始切割视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4 [105.042s - 119.178s] mode=fast -> D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_007.mp4
+2026-04-17 14:51:51,380 - src.ffmpeg_processor - INFO - 视频切割完成: D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_007.mp4 (mode=fast, encoder=nvenc)
+2026-04-17 14:51:53,806 - src.processor - INFO - [export] 20260417_未知歌曲_主歌_007.mp4 | song=未知歌曲 | type=主歌 | highlight=True | 105.04s-119.18s
+2026-04-17 14:51:53,806 - __main__ - INFO - 进度: 90.9% - 处理: 未知歌曲 - 主歌
+2026-04-17 14:51:53,807 - src.ffmpeg_processor - INFO - 开始切割视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4 [119.178s - 133.314s] mode=fast -> D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_008.mp4
+2026-04-17 14:51:56,353 - src.ffmpeg_processor - INFO - 视频切割完成: D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_008.mp4 (mode=fast, encoder=nvenc)
+2026-04-17 14:51:58,959 - src.processor - INFO - [export] 20260417_未知歌曲_主歌_008.mp4 | song=未知歌曲 | type=主歌 | highlight=True | 119.18s-133.31s
+2026-04-17 14:51:58,960 - __main__ - INFO - 进度: 95.5% - 处理: 未知歌曲 - 主歌
+2026-04-17 14:51:58,960 - src.ffmpeg_processor - INFO - 开始切割视频: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (24).mp4 [133.314s - 147.45s] mode=fast -> D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_009.mp4
+2026-04-17 14:52:01,446 - src.ffmpeg_processor - INFO - 视频切割完成: D:\video_clip\output\周深_20260417_1451\Song_01\20260417_未知歌曲_主歌_009.mp4 (mode=fast, encoder=nvenc)
+2026-04-17 14:52:04,211 - src.processor - INFO - [export] 20260417_未知歌曲_主歌_009.mp4 | song=未知歌曲 | type=主歌 | highlight=True | 133.31s-147.45s
+2026-04-17 14:52:04,211 - __main__ - INFO - 进度: 100.0% - 处理: 未知歌曲 - 主歌
+2026-04-17 14:52:04,212 - __main__ - INFO - 进度: 100.0% - 处理完成!
+2026-04-17 14:52:04,212 - src.processor - INFO - 处理完成，共生成 11 个片段
+2026-04-17 14:52:04,217 - __main__ - INFO - ================================================================================
+2026-04-17 14:52:04,218 - __main__ - INFO - 视频处理完成!
+2026-04-17 14:52:04,218 - __main__ - INFO - 总耗时: 102.3秒 (1.7分钟)
+2026-04-17 14:52:04,219 - __main__ - INFO - 处理结果: AnalysisResult(singer='周深', songs=[SongInfo(song_index=0, song_name='Song_01', segments=[Segment(start_time=0.0, end_time=24.6, label='前奏', confidence=12.75, song_index=0, features=SegmentFeatures(rms=0.050528258085250854, zcr=0.08236567659198113, centroid=1397.1206794320492, flatness=0.0010124683612957597, rolloff=0.0, beat_strength=0.0, beat_regularity=0.4607815742492676, voice_ratio=0.5494109252431081, pitch_strength=0.0, chroma_entropy=3.0, spectral_flux=0.5, hf_zcr=0.05, spectral_spread=2000, delta_mfcc_energy=1.0, silence_ratio=0.25869328761314825, rms_variance=0.0, hf_energy_ratio=0.00656157272473137, tempo=0.0, harmonic_ratio=0.9720625281333923, rms_p10=0.015445169061422348, rms_p15=0.02, rms_p20=0.012, rms_p25=0.03692637383937836, rms_p50=0.07619409263134003, rms_p60=0.06, rms_p75=0.14373548328876495, rms_p90=0.19091272354125977, rms_mean=0.09196805208921432, zcr_mean=0.06, zcr_p60=0.08, zcr_p75=0.1, centroid_mean=2000.0, centroid_p50=2000.0, centroid_p60=2500.0, centroid_p75=3000.0, flatness_mean=0.0010124683612957597, flatness_p60=0.07, flatness_p75=0.09, beat_mean=0.3, rolloff_p75=5000.0, rolloff_p90=6000.0, rms_std=0.03, rms_p95=0.12, beat_std=0.1, song_rms_baseline=0.0, relative_energy=1.0, song_rms_p50=0.0, song_rms_p75=0.0, song_rms_p85=0.0, centroid_stability=0.5, centroid_gradient=0.0, centroid_relative=1.0, bpm_stability=0.5, ssm_chorus_likelihood=0.0, repeat_count=0, avg_similarity=0.0)), Segment(start_time=24.6, end_time=49.8, label='speech', confidence=19.0, song_index=0, features=SegmentFeatures(rms=0.03404296934604645, zcr=0.09044848138236648, centroid=2168.174590068125, flatness=0.014514351263642311, rolloff=0.0, beat_strength=0.0, beat_regularity=0.0, voice_ratio=0.3701607772600754, pitch_strength=0.0, chroma_entropy=3.0, spectral_flux=0.5, hf_zcr=0.05, spectral_spread=2000, delta_mfcc_energy=1.0, silence_ratio=0.45080444876363246, rms_variance=0.0, hf_energy_ratio=0.03699821399899445, tempo=0.0, harmonic_ratio=0.912871241569519, rms_p10=0.015445169061422348, rms_p15=0.02, rms_p20=0.012, rms_p25=0.03692637383937836, rms_p50=0.07619409263134003, rms_p60=0.06, rms_p75=0.14373548328876495, rms_p90=0.19091272354125977, rms_mean=0.09196805208921432, zcr_mean=0.06, zcr_p60=0.08, zcr_p75=0.1, centroid_mean=2000.0, centroid_p50=2000.0, centroid_p60=2500.0, centroid_p75=3000.0, flatness_mean=0.014514351263642311, flatness_p60=0.07, flatness_p75=0.09, beat_mean=0.3, rolloff_p75=5000.0, rolloff_p90=6000.0, rms_std=0.03, rms_p95=0.12, beat_std=0.1, song_rms_baseline=0.0, relative_energy=1.0, song_rms_p50=0.0, song_rms_p75=0.0, song_rms_p85=0.0, centroid_stability=0.5, centroid_gradient=0.0, centroid_relative=1.0, bpm_stability=0.5, ssm_chorus_likelihood=0.0, repeat_count=0, avg_similarity=0.0)), Segment(start_time=49.8, end_time=76.56, label='尾奏', confidence=8.75, song_index=0, features=SegmentFeatures(rms=0.10252906382083893, zcr=0.10869572582393755, centroid=2310.2019244569233, flatness=0.014558357186615467, rolloff=0.0, beat_strength=0.0, beat_regularity=0.43703168630599976, voice_ratio=1.0, pitch_strength=0.0, chroma_entropy=3.0, spectral_flux=0.5, hf_zcr=0.05, spectral_spread=2000, delta_mfcc_energy=1.0, silence_ratio=0.11788502147246542, rms_variance=0.0, hf_energy_ratio=0.036290110706648886, tempo=0.0, harmonic_ratio=0.9216727614402771, rms_p10=0.015445169061422348, rms_p15=0.02, rms_p20=0.012, rms_p25=0.03692637383937836, rms_p50=0.07619409263134003, rms_p60=0.06, rms_p75=0.14373548328876495, rms_p90=0.19091272354125977, rms_mean=0.09196805208921432, zcr_mean=0.06, zcr_p60=0.08, zcr_p75=0.1, centroid_mean=2000.0, centroid_p50=2000.0, centroid_p60=2500.0, centroid_p75=3000.0, flatness_mean=0.014558357186615467, flatness_p60=0.07, flatness_p75=0.09, beat_mean=0.3, rolloff_p75=5000.0, rolloff_p90=6000.0, rms_std=0.03, rms_p95=0.12, beat_std=0.1, song_rms_baseline=0.0, relative_energy=1.0, song_rms_p50=0.0, song_rms_p75=0.0, song_rms_p85=0.0, centroid_stability=0.5, centroid_gradient=0.0, centroid_relative=1.0, bpm_stability=0.5, ssm_chorus_likelihood=0.0, repeat_count=0, avg_similarity=0.0)), Segment(start_time=np.float64(76.77), end_time=np.float64(147.45), label='主歌', confidence=11.0, song_index=0, features=SegmentFeatures(rms=0.14675265550613403, zcr=0.11451879594078515, centroid=2359.571813257563, flatness=0.013437589630484581, rolloff=0.0, beat_strength=0.0, beat_regularity=0.5081045031547546, voice_ratio=1.0, pitch_strength=0.0, chroma_entropy=3.0, spectral_flux=0.5, hf_zcr=0.05, spectral_spread=2000, delta_mfcc_energy=1.0, silence_ratio=0.10095707779433222, rms_variance=0.0, hf_energy_ratio=0.03823869254297526, tempo=0.0, harmonic_ratio=0.9014416337013245, rms_p10=0.015445169061422348, rms_p15=0.02, rms_p20=0.012, rms_p25=0.03692637383937836, rms_p50=0.07619409263134003, rms_p60=0.06, rms_p75=0.14373548328876495, rms_p90=0.19091272354125977, rms_mean=0.09196805208921432, zcr_mean=0.06, zcr_p60=0.08, zcr_p75=0.1, centroid_mean=2000.0, centroid_p50=2000.0, centroid_p60=2500.0, centroid_p75=3000.0, flatness_mean=0.013437589630484581, flatness_p60=0.07, flatness_p75=0.09, beat_mean=0.3, rolloff_p75=5000.0, rolloff_p90=6000.0, rms_std=0.03, rms_p95=0.12, beat_std=0.1, song_rms_baseline=0.0, relative_energy=1.0, song_rms_p50=0.0, song_rms_p75=0.0, song_rms_p85=0.0, centroid_stability=0.5, centroid_gradient=0.0, centroid_relative=1.0, bpm_stability=0.5, ssm_chorus_likelihood=0.0, repeat_count=0, avg_similarity=0.0))], start_time=0.0, end_time=147.538141, bpm=None, key=None, song_title='未知歌曲', song_artist='周深', song_confidence=0.0, boundary_confidence=0.0, track_id='')], total_duration=147.538141, audio_info={}, analysis_time=0.0)
+2026-04-17 14:52:04,219 - __main__ - INFO - ================================================================================
+2026-04-17 14:52:04,220 - __main__ - INFO - ================================================================================
+2026-04-17 14:52:04,220 - __main__ - INFO - 🎉 视频处理测试通过!
+2026-04-17 14:52:04,220 - __main__ - INFO - ================================================================================

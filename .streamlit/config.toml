@@ -1,0 +1,5 @@
+[server]
+maxUploadSize = 5000
+address = "0.0.0.0"
+port = 8501
+headless = true

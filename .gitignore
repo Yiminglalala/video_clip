@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+SongFormer_install/venv_gpu/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Project specific
+output/
+tmp/
+*.log
+.DS_Store
+.cache/
+.subtitle_cache/
+.trae/
+__pycache__/
+*.pyc
+
+# Temporary files
+input/
+test_sub/
+static/
+*.mp4
+*.wav
+*.lrc
+*.ass
+*.sqlite3
+*.db
+
+# Backups (handled by Git instead)
+backup_project/
+backup_*
+*.bak_*
+*.backup
+
+# Huggingface cache
+.cache/huggingface/
+
+# Test outputs
+tests/results/

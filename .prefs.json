@@ -1,0 +1,5 @@
+{
+  "min_duration": 15.0,
+  "cut_mode": "precise",
+  "enhance_audio": true
+}

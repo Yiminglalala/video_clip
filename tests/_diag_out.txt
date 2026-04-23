@@ -1,0 +1,13 @@
+2026-04-16 11:54:54,077 [torch._native.dsl_registry] Successfully registered DSL: cutedsl
+2026-04-16 11:54:54,079 [torch._native.dsl_registry] Successfully registered DSL: triton
+2026-04-16 11:54:54,545 [src.audio_analyzer] Pedalboard 未安装
+2026-04-16 11:54:54,546 [src.audio_analyzer] Demucs 可用
+======================================================================
+_populate_song_identity 数据流诊断
+======================================================================
+2026-04-16 11:55:15,804 [src.audio_analyzer] Silero VAD 加载成功 (attempt 1)
+2026-04-16 11:55:15,849 [src.ffmpeg_processor] FFmpeg 版本: ffmpeg version 8.0.1-full_build-www.gyan.dev Copyright (c) 2000-2025 the FFmpeg developers
+Traceback (most recent call last):
+  File "D:\video_clip\tests\_diag_dataflow.py", line 22, in <module>
+    y_full, sr = processor._extract_audio(VIDEO)
+AttributeError: 'LiveVideoProcessor' object has no attribute '_extract_audio'

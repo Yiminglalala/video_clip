@@ -1,0 +1,192 @@
+- generic [ref=e2]:
+  - generic [ref=e11]:
+    - heading "⚙️ 设置" [level=3] [ref=e16]
+    - generic [ref=e19] [cursor=pointer]:
+      - checkbox "音频预处理（人声增强）" [checked]
+      - generic [ref=e22]:
+        - paragraph [ref=e24]: 音频预处理（人声增强）
+        - button "Help for 音频预处理（人声增强）" [ref=e28]:
+          - img [ref=e29]
+    - alert [ref=e35]:
+      - paragraph [ref=e40]: 字幕模式已固定为：按句子显示（横排）
+    - separator [ref=e45]
+    - heading "📡 豆包API配置" [level=3] [ref=e50]
+    - generic [ref=e52]:
+      - generic [ref=e53]:
+        - paragraph [ref=e56]: AppID
+        - button "Help for AppID" [ref=e60] [cursor=pointer]:
+          - img [ref=e61]
+      - textbox "AppID" [ref=e67]:
+        - /placeholder: ""
+        - text: "6118416182"
+    - generic [ref=e69]:
+      - generic [ref=e70]:
+        - paragraph [ref=e73]: Access Token
+        - button "Help for Access Token" [ref=e77] [cursor=pointer]:
+          - img [ref=e78]
+      - generic [ref=e83]:
+        - textbox "Access Token" [ref=e84]:
+          - /placeholder: ""
+          - text: wgYVCSXYek6ATuLNP_DiXFNHZ9jo5ZRV
+        - button "Show password text" [ref=e85] [cursor=pointer]:
+          - img "Show password text" [ref=e86]
+  - generic [ref=e3]:
+    - banner [ref=e90]:
+      - generic [ref=e93]:
+        - button "Deploy" [ref=e95] [cursor=pointer]:
+          - generic [ref=e97]: Deploy
+        - button "Main menu" [ref=e99] [cursor=pointer]:
+          - img [ref=e100]
+    - generic [ref=e103]:
+      - generic [ref=e108]:
+        - heading "🎬 演唱会工具台" [level=1] [ref=e110]:
+          - text: 🎬 演唱会工具台
+          - generic [ref=e111]:
+            - link "Link to heading":
+              - /url: "#f30c60d3"
+              - img
+        - paragraph [ref=e112]: 视频切片 + 字幕生成（简化版）
+      - generic [ref=e114]:
+        - tablist [ref=e116]:
+          - tab "🎬 视频切片" [selected] [ref=e117] [cursor=pointer]:
+            - paragraph [ref=e119]: 🎬 视频切片
+          - tab "🎤 字幕生成" [ref=e120] [cursor=pointer]:
+            - paragraph [ref=e122]: 🎤 字幕生成
+        - tabpanel "🎬 视频切片" [ref=e125]:
+          - generic [ref=e126]:
+            - heading "🎬 演唱会视频智能切片" [level=2] [ref=e131]:
+              - text: 🎬 演唱会视频智能切片
+              - generic [ref=e132]:
+                - link "Link to heading":
+                  - /url: "#39589993"
+                  - img
+            - paragraph [ref=e137]:
+              - text: 上传完整演唱会视频，自动识别歌曲边界并导出切片。切片类型统一为：
+              - strong [ref=e138]: 主歌 / 副歌 / 合唱 / 讲话串场 / 乐器SOLO
+              - text: 。高光瞬间仅作为标记，不重复导出。
+            - paragraph [ref=e143]: 输出模板：MP4 / H.264 / AAC / 1080p / 60fps
+            - generic [ref=e145]:
+              - generic [ref=e146]:
+                - paragraph [ref=e149]: 上传演唱会视频
+                - button "Help for 上传演唱会视频" [ref=e153] [cursor=pointer]:
+                  - img [ref=e154]
+              - region "上传演唱会视频" [ref=e158] [cursor=pointer]:
+                - button "Choose File" [ref=e159]
+                - button "upload Upload" [ref=e161]:
+                  - generic [ref=e163]:
+                    - generic [ref=e165]: upload
+                    - paragraph [ref=e167]: Upload
+                - generic [ref=e170]: 5GB per file • MP4, MOV, AVI, MKV, MPEG4
+            - generic [ref=e172]:
+              - generic [ref=e176]:
+                - paragraph [ref=e180]: 或粘贴本地路径
+                - textbox "或粘贴本地路径" [ref=e183]:
+                  - /placeholder: ""
+                  - text: E:\BaiduNetdiskDownload\video_20260412_211037.mp4
+              - button "使用本地文件" [ref=e188] [cursor=pointer]:
+                - paragraph [ref=e192]: 使用本地文件
+            - generic [ref=e194]:
+              - generic [ref=e199]:
+                - paragraph [ref=e202]: 时长
+                - paragraph [ref=e205]: 183.4s
+              - generic [ref=e210]:
+                - paragraph [ref=e213]: 分辨率
+                - paragraph [ref=e216]: 3840x2160
+              - generic [ref=e221]:
+                - paragraph [ref=e224]: 大小
+                - paragraph [ref=e227]: 1096.3 MB
+              - generic [ref=e232]:
+                - paragraph [ref=e235]: 方向
+                - paragraph [ref=e238]: 横屏
+              - generic [ref=e243]:
+                - paragraph [ref=e246]: 音频流
+                - paragraph [ref=e249]: 有
+            - paragraph [ref=e254]:
+              - text: "路径:"
+              - code [ref=e255]: E:\BaiduNetdiskDownload\video_20260412_211037.mp4
+            - generic [ref=e257]:
+              - generic [ref=e261]:
+                - paragraph [ref=e265]: 🎤 歌手名称
+                - textbox "🎤 歌手名称" [ref=e268]:
+                  - /placeholder: ""
+              - generic [ref=e272]:
+                - paragraph [ref=e276]: 🎵 演唱会名称
+                - textbox "🎵 演唱会名称" [ref=e279]:
+                  - /placeholder: 可选
+            - group [ref=e282]:
+              - generic "keyboard_arrow_down ⚙️ 高级设置" [active] [ref=e340] [cursor=pointer]:
+                - generic [ref=e284]:
+                  - generic [ref=e342]: keyboard_arrow_down
+                  - paragraph [ref=e289]: ⚙️ 高级设置
+              - generic [ref=e344]:
+                - generic [ref=e346]:
+                  - generic [ref=e350]:
+                    - paragraph [ref=e354]: 最小时长（秒）
+                    - generic [ref=e355]:
+                      - spinbutton "最小时长（秒）" [ref=e358]: "8.00"
+                      - generic [ref=e359]:
+                        - button [disabled] [ref=e360]:
+                          - img [ref=e361]
+                        - button [ref=e363] [cursor=pointer]:
+                          - img [ref=e364]
+                  - generic [ref=e369]:
+                    - paragraph [ref=e373]: 最大时长（秒）
+                    - generic [ref=e374]:
+                      - spinbutton "最大时长（秒）" [ref=e377]: "15.00"
+                      - generic [ref=e378]:
+                        - button [ref=e379] [cursor=pointer]:
+                          - img [ref=e380]
+                        - button [ref=e382] [cursor=pointer]:
+                          - img [ref=e383]
+                  - generic [ref=e388]:
+                    - paragraph [ref=e392]: 切割模式
+                    - generic [ref=e394]:
+                      - generic [ref=e395]:
+                        - generic [ref=e396]: ⚡ 快速（关键帧）
+                        - combobox "Selected ⚡ 快速（关键帧）. 切割模式" [ref=e398]
+                      - img "open" [ref=e400]
+                - generic [ref=e404] [cursor=pointer]:
+                  - checkbox "生成字幕"
+                  - paragraph [ref=e409]: 生成字幕
+                - paragraph [ref=e414]: 时长规则：8 ≤ 最小时长 ≤ 最大时长 ≤ 20（默认 8-15）
+                - heading "识曲服务（可选）" [level=5] [ref=e420]:
+                  - text: 识曲服务（可选）
+                  - generic [ref=e421]:
+                    - link "Link to heading":
+                      - /url: "#ad64e51e"
+                      - img
+                - generic [ref=e423]:
+                  - generic [ref=e424]:
+                    - paragraph [ref=e427]: 识曲优先级
+                    - button "Help for 识曲优先级" [ref=e431] [cursor=pointer]:
+                      - img [ref=e432]
+                  - textbox "识曲优先级" [ref=e438]:
+                    - /placeholder: ""
+                    - text: acrcloud,shazamio,shazam
+                - generic [ref=e440]:
+                  - generic [ref=e444]:
+                    - paragraph [ref=e448]: ACRCloud Host
+                    - textbox "ACRCloud Host" [ref=e451]:
+                      - /placeholder: identify-cn-north-1.acrcloud.cn
+                      - text: identify-cn-north-1.acrcloud.cn
+                  - generic [ref=e455]:
+                    - paragraph [ref=e459]: ACRCloud Access Key
+                    - textbox "ACRCloud Access Key" [ref=e462]:
+                      - /placeholder: ""
+                      - text: 9cb04d6d9eb66aebdfb8b88eb913c995
+                  - generic [ref=e466]:
+                    - paragraph [ref=e470]: ACRCloud Access Secret
+                    - generic [ref=e472]:
+                      - textbox "ACRCloud Access Secret" [ref=e473]:
+                        - /placeholder: ""
+                        - text: 2ypfcQh6o9KMaqzwDxDC55hLojU7svSCBQ8ho6Je
+                      - button "Show password text" [ref=e474] [cursor=pointer]:
+                        - img "Show password text" [ref=e475]
+                - paragraph [ref=e481]: 不填 ACRCloud 凭证时，会自动回退到 Shazam。
+                - button "测试 ACRCloud 鉴权" [ref=e484] [cursor=pointer]:
+                  - paragraph [ref=e488]: 测试 ACRCloud 鉴权
+            - button "🚀 开始切片" [ref=e292] [cursor=pointer]:
+              - paragraph [ref=e296]: 🚀 开始切片
+      - generic [ref=e300]:
+        - separator [ref=e301]
+        - paragraph [ref=e303]: 演唱会工具台 | 视频切片 + 豆包字幕生成

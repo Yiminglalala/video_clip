@@ -1,0 +1,9 @@
+# 视频字幕生成器依赖
+# 只保留必要的依赖包
+
+streamlit
+numpy
+scipy
+librosa
+soundfile
+requests
