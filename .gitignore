@@ -43,6 +43,7 @@ tmp/
 .trae/
 __pycache__/
 *.pyc
+.playwright-cli/
 
 # Temporary files
 input/
@@ -54,6 +55,8 @@ static/
 *.ass
 *.sqlite3
 *.db
+*.jpg
+*.png
 
 # Backups (handled by Git instead)
 backup_project/
@@ -66,3 +69,18 @@ backup_*
 
 # Test outputs
 tests/results/
+
+# Temporary debugging files
+_debug_*/
+_*.py
+_*.txt
+_*.json
+
+# Windows
+Thumbs.db
+
+# SongFormer (external library)
+SongFormer_install/
+
+# Pretrained models (optional - keep or remove)
+pretrained_models/
