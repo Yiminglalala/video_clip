@@ -19,6 +19,7 @@ import numpy as np
 import scipy.signal as signal
 import streamlit as st
 from src.doubao_api import DoubaoASR, format_result
+from src.temp_manager import get_temp_manager
 from src.output_spec import (
     DEFAULT_LANDSCAPE_RESOLUTION,
     LANDSCAPE_RESOLUTION_CHOICES,
@@ -43,6 +44,9 @@ if BACKUP_ROOT not in sys.path:
 
 # 确保输出目录存在
 os.makedirs(os.path.join(PROJECT_ROOT, "output"), exist_ok=True)
+
+# 初始化临时文件管理器
+temp_manager = get_temp_manager()
 
 
 # ============================================================
@@ -1097,10 +1101,8 @@ def _render_step0_select_video():
     elif use_local and local_path.strip():
         st.warning(f"文件不存在: {local_path.strip()}")
     elif uploaded_file is not None:
-        temp_dir = os.path.join(st.session_state.output_dir, "uploads")
-        os.makedirs(temp_dir, exist_ok=True)
         upload_ext = os.path.splitext(getattr(uploaded_file, "name", "") or "")[1].lower() or ".bin"
-        video_source = os.path.join(temp_dir, f"upload_{int(time.time())}{upload_ext}")
+        video_source = temp_manager.get_upload_path(f"upload_{int(time.time())}{upload_ext}")
         with open(video_source, "wb") as f:
             f.write(uploaded_file.getvalue())
 
@@ -1484,16 +1486,12 @@ def _render_step2_preview_edit():
             song_index = seg.get('song_index', 0)
             
             try:
-                # 生成预览片段
-                temp_dir = st.session_state.output_dir
-                os.makedirs(temp_dir, exist_ok=True)
-                
                 # 1. 先切原始视频（不带字幕）
                 from src.ffmpeg_processor import FFmpegProcessor
                 from src.output_spec import build_cover_crop_filter, build_ass_filter_value, resolve_output_resolution_spec, normalize_landscape_resolution_choice, DEFAULT_LANDSCAPE_RESOLUTION, OutputResolutionSpec
                 
                 ffmpeg = FFmpegProcessor()
-                temp_no_subtitle = os.path.join(temp_dir, f"temp_preview_nosub_{selected_idx}.mp4")
+                temp_no_subtitle = temp_manager.get_preview_path(f"temp_preview_nosub_{selected_idx}.mp4")
                 
                 output_spec = get_output_resolution_spec(video_source)
                 
@@ -1534,9 +1532,9 @@ def _render_step2_preview_edit():
                             
                             # 调用processor的函数生成带字幕的视频
                             from src.processor import LiveVideoProcessor, ProcessingConfig
-                            temp_subtitled = os.path.join(temp_dir, f"temp_preview_sub_{selected_idx}.mp4")
+                            temp_subtitled = temp_manager.get_preview_path(f"temp_preview_sub_{selected_idx}.mp4")
                             config = ProcessingConfig(
-                                output_dir=temp_dir,
+                                output_dir=temp_manager.get_cache_path(""),
                                 enable_subtitle=True,
                             )
                             dummy_processor = LiveVideoProcessor(config)
@@ -2113,12 +2111,59 @@ def render_sidebar():
             type="password",
             help="豆包API的Access Token"
         )
+        
+        st.divider()
+        
+        # 临时文件管理
+        st.markdown("### 🗂️ 临时文件管理")
+        
+        # 显示临时文件占用情况
+        temp_sizes = temp_manager.get_temp_size()
+        st.markdown(f"**临时文件总占用**: {temp_sizes['total']} MB")
+        
+        # 各分类详情
+        if temp_sizes['previews'] > 0:
+            st.caption(f"📺 预览文件: {temp_sizes['previews']} MB ({temp_manager.get_preview_count()}个)")
+        if temp_sizes['uploads'] > 0:
+            st.caption(f"📤 上传文件: {temp_sizes['uploads']} MB ({temp_manager.get_upload_count()}个)")
+        
+        # 历史临时文件
+        st.caption("📂 历史临时文件（output目录下）")
+        
+        # 清理按钮
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🧹 清理预览", use_container_width=True, help="清理所有预览视频（不影响正式输出）"):
+                deleted = temp_manager.cleanup_all_previews()
+                st.success(f"✅ 已清理 {deleted} 个预览文件")
+                st.rerun()
+        with col2:
+            if st.button("🗑️ 清理全部", use_container_width=True, help="清理所有临时文件（不影响正式输出）"):
+                deleted = temp_manager.cleanup_all_temp()
+                st.success(f"✅ 已清理 {deleted} 个临时文件")
+                st.rerun()
+        
+        # 历史临时文件清理
+        if st.button("🕰️ 清理历史遗留文件", use_container_width=True, help="清理output目录下的历史temp_*和upload_*文件"):
+            result = temp_manager.cleanup_legacy_temp_files()
+            if result["total"] > 0:
+                st.success(f"✅ 已清理 {result['total']} 个历史文件，释放 {result['size_mb']} MB")
+            else:
+                st.info("✅ 没有发现历史临时文件")
+            st.rerun()
+        
+        # 自动清理选项
+        st.divider()
+        auto_cleanup = st.checkbox("下次启动时自动清理过期文件", value=False, help="清理超过24小时的临时文件")
+        if auto_cleanup:
+            if st.button("立即清理过期文件", use_container_width=True):
+                deleted = temp_manager.cleanup_old_files()
+                st.success(f"✅ 已清理 {deleted} 个过期临时文件")
+                st.rerun()
 
 
 def render_subtitle_mode():
     """简化字幕页（豆包 API + 按句显示）。"""
-    temp_dir = st.session_state.output_dir
-    os.makedirs(temp_dir, exist_ok=True)
 
     st.markdown("### 📹 上传视频")
     uploaded_file = st.file_uploader(
@@ -2144,7 +2189,7 @@ def render_subtitle_mode():
     video_path = None
     if uploaded_file:
         # 保存上传的视频
-        video_path = os.path.join(temp_dir, uploaded_file.name)
+        video_path = temp_manager.get_upload_path(uploaded_file.name)
         with open(video_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
         
@@ -2206,7 +2251,7 @@ def render_subtitle_mode():
                 # 生成输出文件名
                 base_name = os.path.splitext(os.path.basename(video_path))[0]
                 output_name = f"{base_name}_subtitled.mp4"
-                output_path = os.path.join(temp_dir, output_name)
+                output_path = temp_manager.get_cache_path(output_name)
                 
                 add_log("正在检测视频方向...")
                 orientation = detect_orientation(video_path)
@@ -2260,13 +2305,14 @@ def main():
     """主函数：双 Tab（切片 + 字幕）。"""
     render_header()
 
+    render_sidebar()
+
     tab1, tab2 = st.tabs(["🎬 视频切片", "🎤 字幕生成"])
 
     with tab1:
         render_slicing_mode()
 
     with tab2:
-        render_sidebar()
         render_subtitle_mode()
 
     # 底部信息

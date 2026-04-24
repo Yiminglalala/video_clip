@@ -58,6 +58,9 @@ static/
 *.jpg
 *.png
 
+# Temp manager
+temp/
+
 # Backups (handled by Git instead)
 backup_project/
 backup_*
@@ -75,6 +78,11 @@ _debug_*/
 _*.py
 _*.txt
 _*.json
+test_gpu_*
+test_chenchusheng_*
+test_dayu_*
+test_large_*
+test_subtitled_*
 
 # Windows
 Thumbs.db
