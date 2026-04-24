@@ -1457,9 +1457,13 @@ def _render_step2_preview_edit():
     if selected_idx is not None and 0 <= selected_idx < len(segments):
         seg = segments[selected_idx]
         use_dynamic_preview = True
+        output_spec = get_output_resolution_spec(video_source)
 
         # 检查缓存的预览视频是否是当前片段
-        cached_preview_key = f"preview_{selected_idx}_{seg['start']:.2f}_{seg['end']:.2f}"
+        cached_preview_key = (
+            f"preview_v2_{selected_idx}_{seg['start']:.2f}_{seg['end']:.2f}_"
+            f"{output_spec.width}x{output_spec.height}_fs90_mv240"
+        )
         cached_preview_path = st.session_state.get(f"slice_preview_{selected_idx}_path")
         
         # 检查缓存是否有效
@@ -1493,7 +1497,6 @@ def _render_step2_preview_edit():
                 ffmpeg = FFmpegProcessor()
                 temp_no_subtitle = temp_manager.get_preview_path(f"temp_preview_nosub_{selected_idx}.mp4")
                 
-                output_spec = get_output_resolution_spec(video_source)
                 
                 # 安全边距：和最终导出一致
                 safety_margin = 0.15
@@ -2014,12 +2017,10 @@ def _render_step3_export():
 
                 try:
                     processor = LiveVideoProcessor(config)
-                    # 优先使用烧录后的视频
-                    subtitled_video_path = st.session_state.get('slice_subtitled_video_path')
+                    processor._cached_asr_results = st.session_state.get('slice_cached_asr_results', {}) or {}
                     video_to_export = st.session_state.slice_video_source
-                    if subtitled_video_path and os.path.exists(subtitled_video_path):
-                        video_to_export = subtitled_video_path
-                        st.info("✅ 正在从已烧录字幕的视频切片")
+                    if config.enable_subtitle:
+                        st.info("字幕导出将直接基于原视频切片，并使用缓存 ASR 仅烧录一次。")
 
                     output_files = processor.export_video_segments(
                         video_to_export,

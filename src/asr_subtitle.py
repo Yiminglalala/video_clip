@@ -189,7 +189,7 @@ def generate_ass_from_sentences(sentences, ass_path, output_spec: OutputResoluti
         output_spec = resolve_output_resolution_spec(orientation, DEFAULT_LANDSCAPE_RESOLUTION)
     play_res_x = output_spec.width
     play_res_y = output_spec.height
-    font_size = 90  # 保持原字体大小
+    font_size = 90
     
     events_text = "\n".join(events)
     ass_content = f"""
@@ -235,22 +235,22 @@ def generate_ass_from_words(words, ass_path, output_spec: OutputResolutionSpec |
     if output_spec is None:
         output_spec = resolve_output_resolution_spec(orientation, DEFAULT_LANDSCAPE_RESOLUTION)
     events_text = "\n".join(events)
-    ass_content = """
+    ass_content = f"""
 [Script Info]
 ScriptType: v4.00+
 Title: Subtitles
-PlayResX: %d
-PlayResY: %d
+PlayResX: {output_spec.width}
+PlayResY: {output_spec.height}
 WrapStyle: 0
 ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,%s,90,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,4,0,2,100,100,240,1
+Style: Default,{SUBTITLE_FONT_FAMILY},90,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,4,0,2,100,100,240,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-""" % (output_spec.width, output_spec.height, SUBTITLE_FONT_FAMILY) + events_text
+""" + events_text
     with open(ass_path, "w", encoding="utf-8-sig") as f:
         f.write(ass_content)
 
