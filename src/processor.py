@@ -48,6 +48,7 @@ from src.output_spec import (
     normalize_landscape_resolution_choice,
     resolve_output_resolution_spec,
 )
+from src.segment_postprocess import build_global_asr_sentences, normalize_export_segment_overlaps
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,8 @@ class ProcessingConfig:
     export_fps: int = 60
     landscape_resolution_choice: str = DEFAULT_LANDSCAPE_RESOLUTION
     source_orientation: str = "auto"
+    doubao_appid: str = ""
+    doubao_access_token: str = ""
 
 
 class LiveVideoProcessor:
@@ -676,9 +679,13 @@ class LiveVideoProcessor:
         Returns:
             (分析结果, 输出文件列表)
         """
-        result, export_segments = self.analyze_video(
+        analysis_result = self.analyze_video(
             video_path, singer=singer, concert=concert, progress_callback=progress_callback
         )
+        if isinstance(analysis_result, tuple) and len(analysis_result) >= 2:
+            result, export_segments = analysis_result[0], analysis_result[1]
+        else:
+            raise ValueError("analyze_video returned an invalid result")
         output_files = self.export_video_segments(
             video_path, export_segments, progress_callback=progress_callback, singer=singer
         )
@@ -1017,7 +1024,10 @@ class LiveVideoProcessor:
         audio_data = buffer.getvalue()
         
         try:
-            appid, access_token = get_doubao_credentials()
+            appid = str(getattr(self.config, "doubao_appid", "") or "").strip()
+            access_token = str(getattr(self.config, "doubao_access_token", "") or "").strip()
+            if not appid or not access_token:
+                appid, access_token = get_doubao_credentials()
             if not appid or not access_token:
                 return {
                     "engine": "doubao",
@@ -1573,158 +1583,9 @@ class LiveVideoProcessor:
         
         return final
 
-    @staticmethod
-    def _interval_overlap_seconds(
-        start_a: float,
-        end_a: float,
-        start_b: float,
-        end_b: float,
-    ) -> float:
-        return max(0.0, min(end_a, end_b) - max(start_a, start_b))
-
-    @staticmethod
-    def _is_time_inside_sentence(time_point: float, sentences: List[Dict[str, Any]], epsilon: float = 0.05) -> bool:
-        for sent in sentences:
-            try:
-                start = float(sent["start"])
-                end = float(sent["end"])
-            except Exception:
-                continue
-            if start + epsilon < time_point < end - epsilon:
-                return True
-        return False
-
     def _get_global_asr_sentences_for_song(self, song: SongInfo) -> List[Dict[str, Any]]:
         """Return cached ASR sentences on the absolute video timeline."""
-        if not getattr(self, "_cached_asr_results", None):
-            return []
-
-        try:
-            song_index = int(getattr(song, "song_index", 0))
-            song_start_time = float(getattr(song, "start_time", 0.0))
-        except Exception:
-            return []
-
-        asr_result = self._cached_asr_results.get(song_index) or {}
-        sentences: List[Dict[str, Any]] = []
-        for sent in asr_result.get("sentences", []) or []:
-            try:
-                start = float(sent.get("start", 0.0)) + song_start_time
-                end = float(sent.get("end", 0.0)) + song_start_time
-            except Exception:
-                continue
-            if end <= start:
-                continue
-            sentences.append(
-                {
-                    "start": start,
-                    "end": end,
-                    "text": str(sent.get("text", "") or ""),
-                }
-            )
-        return sorted(sentences, key=lambda x: (float(x["start"]), float(x["end"])))
-
-    def _choose_sentence_aware_overlap_cut(
-        self,
-        prev_item: Dict[str, Any],
-        next_item: Dict[str, Any],
-        sentences: List[Dict[str, Any]],
-        min_duration: float,
-        max_duration: float,
-    ) -> float:
-        prev_start = float(prev_item["start"])
-        prev_end = float(prev_item["end"])
-        next_start = float(next_item["start"])
-        next_end = float(next_item["end"])
-
-        overlap_start = max(prev_start, next_start)
-        overlap_end = min(prev_end, next_end)
-        reference_cut = (overlap_start + overlap_end) / 2.0
-
-        candidates: List[Tuple[float, float, str]] = []
-
-        def add_candidate(cut_point: float, base_score: float, reason: str) -> None:
-            min_gap = 0.10
-            if cut_point <= prev_start + min_gap or cut_point >= next_end - min_gap:
-                return
-            prev_duration = cut_point - prev_start
-            next_duration = next_end - cut_point
-            score = base_score + abs(cut_point - reference_cut) * 0.05
-            if prev_duration < min_duration:
-                score += (min_duration - prev_duration) * 20.0
-            if next_duration < min_duration:
-                score += (min_duration - next_duration) * 20.0
-            if prev_duration > max_duration * 1.10:
-                score += (prev_duration - max_duration) * 4.0
-            if next_duration > max_duration * 1.10:
-                score += (next_duration - max_duration) * 4.0
-            candidates.append((score, cut_point, reason))
-
-        # Prefer a real gap between two subtitle sentences inside the overlap.
-        for left, right in zip(sentences, sentences[1:]):
-            try:
-                gap_start = float(left["end"])
-                gap_end = float(right["start"])
-            except Exception:
-                continue
-            if gap_end <= gap_start:
-                continue
-            if gap_end < overlap_start or gap_start > overlap_end:
-                continue
-            cut = (max(gap_start, overlap_start) + min(gap_end, overlap_end)) / 2.0
-            add_candidate(cut, 0.0, "subtitle_gap")
-
-        # Sentence starts/ends inside the overlap are safe cuts too.
-        for sent in sentences:
-            for key in ("start", "end"):
-                try:
-                    boundary = float(sent[key])
-                except Exception:
-                    continue
-                if overlap_start <= boundary <= overlap_end:
-                    add_candidate(boundary, 1.0, f"sentence_{key}")
-
-        # If one sentence is shared by both clips, assign the whole sentence to
-        # the side that covers more of it instead of cutting it in half.
-        for sent in sentences:
-            try:
-                sent_start = float(sent["start"])
-                sent_end = float(sent["end"])
-            except Exception:
-                continue
-            prev_cover = self._interval_overlap_seconds(sent_start, sent_end, prev_start, prev_end)
-            next_cover = self._interval_overlap_seconds(sent_start, sent_end, next_start, next_end)
-            if prev_cover <= 0.0 or next_cover <= 0.0:
-                continue
-            if prev_cover >= next_cover:
-                add_candidate(sent_end, 2.0, "assign_sentence_to_prev")
-            else:
-                add_candidate(sent_start, 2.0, "assign_sentence_to_next")
-
-        # Last fallback: midpoint of the overlap.
-        if not candidates or not sentences:
-            add_candidate(reference_cut, 5.0, "overlap_midpoint")
-        elif self._is_time_inside_sentence(reference_cut, sentences):
-            add_candidate(reference_cut, 500.0, "midpoint_inside_sentence_fallback")
-        else:
-            add_candidate(reference_cut, 5.0, "overlap_midpoint")
-
-        if not candidates:
-            return reference_cut
-
-        candidates.sort(key=lambda item: (item[0], abs(item[1] - reference_cut)))
-        best_score, best_cut, reason = candidates[0]
-        logger.info(
-            "[export overlap] choose cut %.2f reason=%s score=%.2f prev=(%.2f-%.2f) next=(%.2f-%.2f)",
-            best_cut,
-            reason,
-            best_score,
-            prev_start,
-            prev_end,
-            next_start,
-            next_end,
-        )
-        return best_cut
+        return build_global_asr_sentences(song, getattr(self, "_cached_asr_results", {}) or {})
 
     def _normalize_export_segment_overlaps(
         self,
@@ -1734,74 +1595,14 @@ class LiveVideoProcessor:
         overlap_tolerance: float = 0.30,
     ) -> List[Dict[str, Any]]:
         """Make adjacent export segments non-overlapping without splitting subtitle sentences when possible."""
-        if len(segments) <= 1:
-            return segments
-
-        normalized = [dict(seg) for seg in sorted(segments, key=lambda x: (float(x["start"]), float(x["end"])))]
-        sentence_cache: Dict[int, List[Dict[str, Any]]] = {}
-        fixed_count = 0
-
-        for idx in range(len(normalized) - 1):
-            prev_item = normalized[idx]
-            next_item = normalized[idx + 1]
-            prev_end = float(prev_item["end"])
-            next_start = float(next_item["start"])
-            overlap = prev_end - next_start
-            if overlap <= overlap_tolerance:
-                if overlap > 0:
-                    prev_item["end"] = next_start
-                    fixed_count += 1
-                continue
-
-            prev_song = prev_item.get("song")
-            next_song = next_item.get("song")
-            prev_song_index = int(getattr(prev_song, "song_index", -1))
-            next_song_index = int(getattr(next_song, "song_index", -2))
-            if prev_song_index != next_song_index:
-                cut_point = next_start
-            else:
-                if prev_song_index not in sentence_cache:
-                    sentence_cache[prev_song_index] = self._get_global_asr_sentences_for_song(prev_song)
-                cut_point = self._choose_sentence_aware_overlap_cut(
-                    prev_item,
-                    next_item,
-                    sentence_cache.get(prev_song_index, []),
-                    min_duration,
-                    max_duration,
-                )
-
-            old_prev_end = prev_end
-            old_next_start = next_start
-            prev_item["end"] = round(float(cut_point), 3)
-            next_item["start"] = round(float(cut_point), 3)
-            fixed_count += 1
-            logger.info(
-                "[export overlap] fixed overlap %.2fs: prev_end %.2f->%.2f next_start %.2f->%.2f",
-                overlap,
-                old_prev_end,
-                float(prev_item["end"]),
-                old_next_start,
-                float(next_item["start"]),
-            )
-
-        final_segments = [
-            seg
-            for seg in normalized
-            if float(seg["end"]) > float(seg["start"]) + 0.05
-        ]
-
-        remaining_overlaps = []
-        for left, right in zip(final_segments, final_segments[1:]):
-            overlap = float(left["end"]) - float(right["start"])
-            if overlap > overlap_tolerance:
-                remaining_overlaps.append((float(left["start"]), float(left["end"]), float(right["start"]), float(right["end"]), overlap))
-
-        if fixed_count:
-            logger.info("[export overlap] normalized %s adjacent overlaps", fixed_count)
-        if remaining_overlaps:
-            logger.warning("[export overlap] remaining overlaps after normalization: %s", remaining_overlaps[:5])
-
-        return final_segments
+        return normalize_export_segment_overlaps(
+            segments,
+            min_duration,
+            max_duration,
+            cached_asr_results=getattr(self, "_cached_asr_results", {}) or {},
+            overlap_tolerance=overlap_tolerance,
+            logger=logger,
+        )
 
     def _enforce_segment_duration_constraints(
         self,

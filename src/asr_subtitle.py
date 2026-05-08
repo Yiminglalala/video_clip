@@ -17,6 +17,7 @@ from src.output_spec import (
     resolve_output_resolution_spec,
     STANDARD_VIDEO_OUTPUT_ARGS,
 )
+from src.subtitle_export import escape_ass_text, format_ass_time
 
 
 # ============================================================================
@@ -172,16 +173,9 @@ def generate_ass_from_sentences(sentences, ass_path, output_spec: OutputResoluti
         end = sent.get("end", start + 3)
         text = sent.get("text", "")
         
-        def format_time(sec):
-            h = int(sec // 3600)
-            m = int((sec % 3600) // 60)
-            s = sec % 60
-            return f"{h}:{m:02d}:{s:05.2f}"
-        
-        start_str = format_time(start)
-        end_str = format_time(end)
-        text = text.replace("\\", "\\\\").replace("{", "\\{").replace("}", "\\}")
-        text = text.replace("\n", "\\N").replace("\r", "")
+        start_str = format_ass_time(start)
+        end_str = format_ass_time(end)
+        text = escape_ass_text(text)
         # 自动换行处理
         events.append(f"Dialogue: 0,{start_str},{end_str},Default,,0000,0000,0000,,{text}")
     
@@ -220,16 +214,9 @@ def generate_ass_from_words(words, ass_path, output_spec: OutputResolutionSpec |
         end = word.get("end", start + 1)
         text = word.get("text", word.get("word", ""))
         
-        def format_time(sec):
-            h = int(sec // 3600)
-            m = int((sec % 3600) // 60)
-            s = sec % 60
-            return f"{h}:{m:02d}:{s:05.2f}"
-        
-        start_str = format_time(start)
-        end_str = format_time(end)
-        text = text.replace("\\", "\\\\").replace("{", "\\{").replace("}", "\\}")
-        text = text.replace("\n", "\\N").replace("\r", "")
+        start_str = format_ass_time(start)
+        end_str = format_ass_time(end)
+        text = escape_ass_text(text)
         events.append(f"Dialogue: 0,{start_str},{end_str},Default,,0000,0000,0000,,{text}")
     
     if output_spec is None:
@@ -304,15 +291,11 @@ def words_to_sentence_chunks(words, max_chars=24, max_gap=0.6):
 
 
 def _format_ass_time(seconds):
-    h = int(seconds // 3600)
-    m = int((seconds % 3600) // 60)
-    s = seconds % 60
-    cs = int((seconds % 1) * 100)
-    return f"{h}:{m:02d}:{s:02d}.{cs:02d}"
+    return format_ass_time(seconds)
 
 
 def _escape_ass_text(text):
-    return text.replace("\\", "\\\\").replace("{", "\\{").replace("}", "\\}")
+    return escape_ass_text(text)
 
 
 def _escape_srt_text(text):

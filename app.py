@@ -21,6 +21,8 @@ import streamlit as st
 from src.doubao_api import DoubaoASR, format_result
 from src.temp_manager import get_temp_manager
 from src.runtime_config import get_doubao_credentials, get_runtime_config_path
+from src.slicing_ui import build_slicing_processing_config, detect_songformer_device
+from src.subtitle_export import escape_ass_text, format_ass_time
 from src.output_spec import (
     DEFAULT_LANDSCAPE_RESOLUTION,
     LANDSCAPE_RESOLUTION_CHOICES,
@@ -484,19 +486,9 @@ def generate_ass_from_sentences(sentences, ass_path, output_spec: OutputResoluti
         end = sent.get("end", start + 3)
         text = sent.get("text", "")
         
-        # 格式化时间
-        def format_time(sec):
-            h = int(sec // 3600)
-            m = int((sec % 3600) // 60)
-            s = sec % 60
-            return f"{h}:{m:02d}:{s:05.2f}"
-        
-        start_str = format_time(start)
-        end_str = format_time(end)
-        
-        # 转义 ASS 特殊字符
-        text = text.replace("\\", "\\\\").replace("{", "\\{").replace("}", "\\}")
-        text = text.replace("\n", "\\N").replace("\r", "")
+        start_str = format_ass_time(start)
+        end_str = format_ass_time(end)
+        text = escape_ass_text(text)
         
         # 自动换行处理
         
@@ -542,19 +534,9 @@ def generate_ass_from_words(words, ass_path, output_spec: OutputResolutionSpec |
         end = word.get("end", start + 1)
         text = word.get("text", word.get("word", ""))
         
-        # 格式化时间
-        def format_time(sec):
-            h = int(sec // 3600)
-            m = int((sec % 3600) // 60)
-            s = sec % 60
-            return f"{h}:{m:02d}:{s:05.2f}"
-        
-        start_str = format_time(start)
-        end_str = format_time(end)
-        
-        # 转义 ASS 特殊字符
-        text = text.replace("\\", "\\\\").replace("{", "\\{").replace("}", "\\}")
-        text = text.replace("\n", "\\N").replace("\r", "")
+        start_str = format_ass_time(start)
+        end_str = format_ass_time(end)
+        text = escape_ass_text(text)
         
         events.append(f"Dialogue: 0,{start_str},{end_str},Default,,0000,0000,0000,,{text}")
     
@@ -1008,7 +990,7 @@ def _is_highlight_meta(seg_obj, filename: str) -> bool:
 def render_slicing_mode():
     """视频智能切片模式 - 四步工作流：选择视频 -> 处理 -> 预览编辑 -> 导出"""
     try:
-        from src.processor import LiveVideoProcessor, ProcessingConfig
+        from src.processor import LiveVideoProcessor
         from src.audio_analyzer import LABEL_CN, LABEL_COLORS, LABEL_INTRO, LABEL_VERSE, LABEL_CHORUS, LABEL_OUTRO, LABEL_INTERLUDE, LABEL_SOLO, LABEL_TALK, LABEL_SPEECH, LABEL_CROWD, LABEL_AUDIENCE, LABEL_OTHER, LABEL_SILENCE
     except Exception as e:
         st.error("切片模块未就绪：无法导入 `src.processor` 或 `src.audio_analyzer`。")
@@ -1209,7 +1191,7 @@ def _render_step0_select_video():
 
 def _render_step1_processing():
     """步骤 2: 处理视频"""
-    from src.processor import LiveVideoProcessor, ProcessingConfig
+    from src.processor import LiveVideoProcessor
     from src.audio_analyzer import LABEL_CN, LABEL_COLORS, LABEL_INTRO, LABEL_VERSE, LABEL_CHORUS, LABEL_OUTRO, LABEL_INTERLUDE, LABEL_SOLO, LABEL_TALK, LABEL_SPEECH, LABEL_CROWD, LABEL_AUDIENCE, LABEL_OTHER, LABEL_SILENCE
     
     st.subheader("⚙️ 步骤 2: 视频结构分析")
@@ -1241,41 +1223,21 @@ def _render_step1_processing():
         # 未处理：显示开始处理按钮
         if st.button("🚀 开始分析", type="primary", use_container_width=True, key="slice_step1_start_btn"):
             # 检查 CUDA
-            songformer_device = "cuda"
-            try:
-                import torch
-                cuda_ok = bool(torch.cuda.is_available())
-                if cuda_ok:
-                    gpu_name = torch.cuda.get_device_name(0)
-                    props = torch.cuda.get_device_properties(0)
-                    gpu_mem_bytes = getattr(props, 'total_memory', None) or getattr(props, 'total_mem', 0)
-                    gpu_mem = gpu_mem_bytes / (1024**3)
-                    st.info(f"✅ GPU 可用：{gpu_name} ({gpu_mem:.1f}GB)，所有模型将使用 CUDA 加速")
-                    songformer_device = "cuda"
-                else:
-                    st.warning("⚠️ **CUDA 不可用**：SongFormer / Demucs / FireRed 将以 CPU 运行，速度会显著下降。建议检查 GPU 驱动。")
-                    songformer_device = "cpu"
-            except Exception as torch_err:
-                st.warning(f"⚠️ 无法检测 CUDA 状态：{torch_err}，将尝试 auto 模式。")
-                songformer_device = "auto"
+            songformer_device, device_message = detect_songformer_device()
+            st.session_state.slice_songformer_device = songformer_device
+            if songformer_device == "cuda":
+                st.info(f"✅ {device_message}")
+            else:
+                st.warning(f"⚠️ {device_message}")
 
             # 获取配置
             config_dict = st.session_state.slice_config
-            config = ProcessingConfig(
-                output_dir=st.session_state.output_dir,
-                min_segment_duration=float(config_dict.get("min_dur", 8.0)),
-                max_segment_duration=float(config_dict.get("max_dur", 15.0)),
-                min_duration_limit=float(config_dict.get("min_dur", 8.0)),
-                max_duration_limit=float(config_dict.get("max_dur", 15.0)),
-                enable_songformer=True,
-                strict_songformer=True,
-                songformer_device=songformer_device,
-                songformer_window=60,
-                songformer_hop=30,
-                concert=config_dict.get("concert_name") or None,
-                cut_mode=config_dict.get("cut_mode", "fast"),
-                enable_subtitle=config_dict.get("enable_subtitle", False),
-                subtitle_mode="sentence",
+            config = build_slicing_processing_config(
+                config_dict,
+                st.session_state.output_dir,
+                songformer_device,
+                doubao_appid=st.session_state.get("doubao_appid", ""),
+                doubao_access_token=st.session_state.get("doubao_access_token", ""),
             )
 
             # 检查 SongFormer 依赖
@@ -1917,7 +1879,7 @@ def _apply_segment_edit(idx, new_label, new_start, new_end, new_sf_label=None):
 
 def _render_step3_export():
     """步骤 4: 导出视频"""
-    from src.processor import LiveVideoProcessor, ProcessingConfig
+    from src.processor import LiveVideoProcessor
 
     st.subheader("🎬 步骤 3: 导出切片视频")
 
@@ -1994,23 +1956,13 @@ def _render_step3_export():
 
                 # 获取配置（复用 Step1 的配置）
                 config_dict = st.session_state.slice_config
-                config = ProcessingConfig(
-                    output_dir=st.session_state.output_dir,
-                    min_segment_duration=float(config_dict.get("min_dur", 8.0)),
-                    max_segment_duration=float(config_dict.get("max_dur", 15.0)),
-                    min_duration_limit=float(config_dict.get("min_dur", 8.0)),
-                    max_duration_limit=float(config_dict.get("max_dur", 15.0)),
-                    enable_songformer=True,
-                    strict_songformer=True,
-                    songformer_device="cuda",
-                    concert=config_dict.get("concert_name") or None,
-                    cut_mode=config_dict.get("cut_mode", "fast"),
-                    enable_subtitle=config_dict.get("enable_subtitle", False),
-                    subtitle_mode="sentence",
-                    landscape_resolution_choice=normalize_landscape_resolution_choice(
-                        config_dict.get("landscape_resolution_choice", DEFAULT_LANDSCAPE_RESOLUTION)
-                    ),
+                config = build_slicing_processing_config(
+                    config_dict,
+                    st.session_state.output_dir,
+                    st.session_state.get("slice_songformer_device", "auto"),
                     source_orientation=detect_orientation(st.session_state.slice_video_source),
+                    doubao_appid=st.session_state.get("doubao_appid", ""),
+                    doubao_access_token=st.session_state.get("doubao_access_token", ""),
                 )
 
                 def on_export_progress(pct, msg):
