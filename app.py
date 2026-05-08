@@ -20,6 +20,7 @@ import scipy.signal as signal
 import streamlit as st
 from src.doubao_api import DoubaoASR, format_result
 from src.temp_manager import get_temp_manager
+from src.runtime_config import get_doubao_credentials, get_runtime_config_path
 from src.output_spec import (
     DEFAULT_LANDSCAPE_RESOLUTION,
     LANDSCAPE_RESOLUTION_CHOICES,
@@ -94,6 +95,7 @@ st.markdown("""
 # ============================================================
 def init_session_state():
     """初始化 session state"""
+    doubao_appid, doubao_access_token = get_doubao_credentials()
     defaults = {
         "preprocessing": True,             # 是否预处理
         "subtitle_mode": "sentence",       # word | sentence
@@ -102,8 +104,8 @@ def init_session_state():
         "processing": False,
         "process_logs": [],
         # 豆包API配置
-        "doubao_appid": "6118416182",
-        "doubao_access_token": "wgYVCSXYek6ATuLNP_DiXFNHZ9jo5ZRV",
+        "doubao_appid": doubao_appid,
+        "doubao_access_token": doubao_access_token,
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -2101,6 +2103,10 @@ def render_sidebar():
         
         # 豆包API配置
         st.markdown("### 📡 豆包API配置")
+        st.caption(
+            "优先读取环境变量 DOUBAO_APPID / DOUBAO_ACCESS_TOKEN；"
+            f"也可写入本地私有配置 `{get_runtime_config_path()}`。"
+        )
         st.session_state.doubao_appid = st.text_input(
             "AppID",
             value=st.session_state.doubao_appid,
@@ -2112,6 +2118,8 @@ def render_sidebar():
             type="password",
             help="豆包API的Access Token"
         )
+        if not st.session_state.doubao_appid or not st.session_state.doubao_access_token:
+            st.warning("未配置豆包 API，字幕生成和切片字幕会失败。")
         
         st.divider()
         

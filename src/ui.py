@@ -1,5 +1,9 @@
 """
 视频片段编辑与管理系统 - Streamlit UI
+
+Legacy prototype only. The current product entrypoint is ``D:\video_clip\app.py``.
+Do not add new user-facing features here unless this module is explicitly
+reconnected to the main app.
 """
 
 import streamlit as st
@@ -57,6 +61,7 @@ class VideoEditorUI:
         )
         
         st.title("🎬 视频片段编辑与管理系统")
+        st.warning("这是旧版原型 UI。当前正式入口是 D:\\video_clip\\app.py。")
         
         # 侧边栏导航
         page = st.sidebar.radio(
@@ -416,4 +421,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

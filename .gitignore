@@ -45,6 +45,13 @@ __pycache__/
 *.pyc
 .playwright-cli/
 
+# Local private runtime config
+local_config.json
+local_config.*.json
+!local_config.example.json
+.env
+.env.*
+
 # Temporary files
 input/
 test_sub/

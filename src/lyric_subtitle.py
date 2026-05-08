@@ -589,6 +589,10 @@ def _identify_song_with_shazamapi(audio_path: str) -> Optional[SongMatch]:
 
 
 def identify_song_from_file(audio_path: str) -> Optional[SongMatch]:
+    if os.environ.get("ENABLE_LEGACY_SONG_IDENTIFY", "").strip().lower() not in {"1", "true", "yes", "on"}:
+        logger.info("legacy song identification disabled; set ENABLE_LEGACY_SONG_IDENTIFY=1 to enable")
+        return None
+
     audio_key = _audio_cache_key(audio_path)
     if audio_key:
         cached = _get_cached_song_match(audio_key)
