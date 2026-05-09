@@ -22,7 +22,13 @@ from src.doubao_api import DoubaoASR, format_result
 from src.temp_manager import get_temp_manager
 from src.runtime_config import get_doubao_credentials, get_runtime_config_path
 from src.slicing_ui import build_slicing_processing_config, detect_songformer_device
-from src.subtitle_export import escape_ass_text, format_ass_time
+from src.subtitle_export import (
+    DEFAULT_SUBTITLE_MAX_CHARS,
+    escape_ass_text,
+    find_subtitle_split_index,
+    format_ass_time,
+    split_subtitle_sentence_entry,
+)
 from src.output_spec import (
     DEFAULT_LANDSCAPE_RESOLUTION,
     LANDSCAPE_RESOLUTION_CHOICES,
@@ -380,7 +386,7 @@ def run_asr(audio: np.ndarray, sr: int, do_preprocess: bool = True) -> dict:
 # 字幕生成 & 视频烧录
 # ============================================================
 
-def _auto_wrap_text(text, max_chars=14):
+def _auto_wrap_text(text, max_chars=DEFAULT_SUBTITLE_MAX_CHARS):
     """自动换行：在标点符号或适当位置换行"""
     if len(text) <= max_chars:
         return text
@@ -422,55 +428,12 @@ def _auto_wrap_text(text, max_chars=14):
     return "\\N".join(lines)
 
 
-def _find_split_index(text: str, max_chars: int = 14) -> int:
-    if len(text) <= max_chars:
-        return len(text)
-
-    preferred_start = max(1, max_chars - 4)
-    preferred_end = min(len(text) - 1, max_chars + 2)
-    punctuations = "。！？、，；：,.;:!? "
-
-    for idx in range(preferred_end, preferred_start - 1, -1):
-        if text[idx - 1] in punctuations:
-            return idx
-
-    return min(max_chars, len(text) - 1)
+def _find_split_index(text: str, max_chars: int = DEFAULT_SUBTITLE_MAX_CHARS) -> int:
+    return find_subtitle_split_index(text, max_chars=max_chars)
 
 
-def _split_long_sentence_entry(sent: dict, max_chars: int = 14) -> list[dict]:
-    text = str(sent.get("text", "") or "").strip()
-    if not text or len(text) <= max_chars:
-        return [sent]
-
-    split_idx = _find_split_index(text, max_chars=max_chars)
-    first_text = text[:split_idx].strip()
-    second_text = text[split_idx:].strip()
-    if not first_text or not second_text:
-        return [sent]
-
-    start = float(sent.get("start", 0.0) or 0.0)
-    end = float(sent.get("end", start + 3.0) or (start + 3.0))
-    total_duration = max(end - start, 0.0)
-
-    if total_duration <= 0.12:
-        split_time = start + 0.06
-    else:
-        ratio = len(first_text) / max(len(first_text) + len(second_text), 1)
-        split_time = start + total_duration * ratio
-        min_gap = min(0.18, total_duration / 3.0)
-        split_time = max(start + min_gap, min(end - min_gap, split_time))
-
-    first_sent = dict(sent)
-    first_sent["text"] = first_text
-    first_sent["start"] = start
-    first_sent["end"] = split_time
-
-    second_sent = dict(sent)
-    second_sent["text"] = second_text
-    second_sent["start"] = split_time
-    second_sent["end"] = end
-
-    return [first_sent, second_sent]
+def _split_long_sentence_entry(sent: dict, max_chars: int = DEFAULT_SUBTITLE_MAX_CHARS) -> list[dict]:
+    return split_subtitle_sentence_entry(sent, max_chars=max_chars)
 
 
 def generate_ass_from_sentences(sentences, ass_path, output_spec: OutputResolutionSpec | None = None, orientation="landscape"):
@@ -480,7 +443,7 @@ def generate_ass_from_sentences(sentences, ass_path, output_spec: OutputResoluti
     events = []
     expanded_sentences = []
     for sent in sentences:
-        expanded_sentences.extend(_split_long_sentence_entry(sent, max_chars=14))
+        expanded_sentences.extend(_split_long_sentence_entry(sent, max_chars=DEFAULT_SUBTITLE_MAX_CHARS))
     for i, sent in enumerate(expanded_sentences):
         start = sent.get("start", 0)
         end = sent.get("end", start + 3)
@@ -1462,13 +1425,11 @@ def _render_step2_preview_edit():
                 temp_no_subtitle = temp_manager.get_preview_path(f"temp_preview_nosub_{selected_idx}.mp4")
                 
                 
-                # 安全边距：和最终导出一致
-                safety_margin = 0.15
-                safe_start = seg['start'] + safety_margin
-                safe_end = seg['end'] - safety_margin
-                if safe_end <= safe_start:
-                    safe_end = seg['end'] - 0.05
-                    safe_start = seg['start']
+                # Preview should match the reviewed segment boundaries. Do not
+                # trim media to prevent subtitle bleed; clamp subtitle events
+                # instead so words near the boundary are not cut off.
+                safe_start = seg['start']
+                safe_end = seg['end']
                 
                 cut_result = ffmpeg.cut_video(
                     video_source,
@@ -1476,7 +1437,8 @@ def _render_step2_preview_edit():
                     safe_end,
                     temp_no_subtitle,
                     mode="accurate",
-                    output_spec=output_spec
+                    output_spec=output_spec,
+                    safety_margin=0.0,
                 )
                 
                 if cut_result.success:

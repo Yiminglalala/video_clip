@@ -17,7 +17,13 @@ from src.output_spec import (
     resolve_output_resolution_spec,
     STANDARD_VIDEO_OUTPUT_ARGS,
 )
-from src.subtitle_export import escape_ass_text, format_ass_time
+from src.subtitle_export import (
+    DEFAULT_SUBTITLE_MAX_CHARS,
+    escape_ass_text,
+    find_subtitle_split_index,
+    format_ass_time,
+    split_subtitle_sentence_entry,
+)
 
 
 # ============================================================================
@@ -70,7 +76,7 @@ def transcribe_with_timestamps(
 # ASS 字幕生成（与 app.py 完全一致）
 # ============================================================================
 
-def _auto_wrap_text(text, max_chars=14):
+def _auto_wrap_text(text, max_chars=DEFAULT_SUBTITLE_MAX_CHARS):
     """自动换行：在标点符号或适当位置换行"""
     if len(text) <= max_chars:
         return text
@@ -112,62 +118,19 @@ def _auto_wrap_text(text, max_chars=14):
     return "\\N".join(lines)
 
 
-def _find_split_index(text: str, max_chars: int = 14) -> int:
-    if len(text) <= max_chars:
-        return len(text)
-
-    preferred_start = max(1, max_chars - 4)
-    preferred_end = min(len(text) - 1, max_chars + 2)
-    punctuations = "。！？、，；：,.;:!? "
-
-    for idx in range(preferred_end, preferred_start - 1, -1):
-        if text[idx - 1] in punctuations:
-            return idx
-
-    return min(max_chars, len(text) - 1)
+def _find_split_index(text: str, max_chars: int = DEFAULT_SUBTITLE_MAX_CHARS) -> int:
+    return find_subtitle_split_index(text, max_chars=max_chars)
 
 
-def _split_long_sentence_entry(sent: dict, max_chars: int = 14) -> list[dict]:
-    text = str(sent.get("text", "") or "").strip()
-    if not text or len(text) <= max_chars:
-        return [sent]
-
-    split_idx = _find_split_index(text, max_chars=max_chars)
-    first_text = text[:split_idx].strip()
-    second_text = text[split_idx:].strip()
-    if not first_text or not second_text:
-        return [sent]
-
-    start = float(sent.get("start", 0.0) or 0.0)
-    end = float(sent.get("end", start + 3.0) or (start + 3.0))
-    total_duration = max(end - start, 0.0)
-
-    if total_duration <= 0.12:
-        split_time = start + 0.06
-    else:
-        ratio = len(first_text) / max(len(first_text) + len(second_text), 1)
-        split_time = start + total_duration * ratio
-        min_gap = min(0.18, total_duration / 3.0)
-        split_time = max(start + min_gap, min(end - min_gap, split_time))
-
-    first_sent = dict(sent)
-    first_sent["text"] = first_text
-    first_sent["start"] = start
-    first_sent["end"] = split_time
-
-    second_sent = dict(sent)
-    second_sent["text"] = second_text
-    second_sent["start"] = split_time
-    second_sent["end"] = end
-
-    return [first_sent, second_sent]
+def _split_long_sentence_entry(sent: dict, max_chars: int = DEFAULT_SUBTITLE_MAX_CHARS) -> list[dict]:
+    return split_subtitle_sentence_entry(sent, max_chars=max_chars)
 
 
 def generate_ass_from_sentences(sentences, ass_path, output_spec: OutputResolutionSpec | None = None, orientation="landscape"):
     events = []
     expanded_sentences = []
     for sent in sentences:
-        expanded_sentences.extend(_split_long_sentence_entry(sent, max_chars=14))
+        expanded_sentences.extend(_split_long_sentence_entry(sent, max_chars=DEFAULT_SUBTITLE_MAX_CHARS))
     for i, sent in enumerate(expanded_sentences):
         start = sent.get("start", 0)
         end = sent.get("end", start + 3)

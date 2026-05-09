@@ -341,6 +341,7 @@ class FFmpegProcessor:
         video_info: Optional[Dict[str, Any]] = None,  # 优化#4: 预缓存的视频信息
         progress_callback: Optional[Callable] = None,
         output_spec: Optional[OutputResolutionSpec] = None,
+        safety_margin: float = 0.15,
     ) -> ProcessingResult:
         """
         按时间范围切割视频
@@ -361,10 +362,13 @@ class FFmpegProcessor:
         """
         output_path = os.path.splitext(output_path)[0] + ".mp4"
         
-        # ── 视频切片安全保护：结束边界增加安全边距，防止包含下一段 ──
-        SAFETY_MARGIN = 0.15
-        safe_end_time = end_time - SAFETY_MARGIN
-        safe_start_time = start_time + SAFETY_MARGIN
+        # Keep legacy callers protected by default, but allow final exports to
+        # preserve the exact reviewed boundaries. Trimming media here can cut
+        # sung words that land near a segment boundary; subtitle bleed should be
+        # handled by clamping subtitle events, not by shortening audio/video.
+        margin = max(0.0, float(safety_margin or 0.0))
+        safe_end_time = end_time - margin
+        safe_start_time = start_time + margin
         
         # 确保调整后的时间依然有效
         if safe_end_time <= safe_start_time:
@@ -372,7 +376,7 @@ class FFmpegProcessor:
             safe_end_time = end_time - 0.05
             safe_start_time = start_time
         
-        logger.info(f"开始切割视频: {video_path} [{safe_start_time}s - {safe_end_time}s] (original=[{start_time}-{end_time}]) mode={mode} -> {output_path}")
+        logger.info(f"开始切割视频: {video_path} [{safe_start_time}s - {safe_end_time}s] (original=[{start_time}-{end_time}], safety_margin={margin}) mode={mode} -> {output_path}")
         
         if not os.path.exists(video_path):
             return ProcessingResult(False, None, f"输入文件不存在: {video_path}")

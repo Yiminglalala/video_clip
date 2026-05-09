@@ -15,6 +15,9 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 BOUNDARY_EPSILON = 0.05
 DEFAULT_OVERLAP_TOLERANCE = 0.30
+ADJACENT_BOUNDARY_TOLERANCE = 0.50
+SENTENCE_END_NEAR_TOLERANCE = 0.12
+SENTENCE_TAIL_PADDING = 0.35
 
 TYPE_PRIORITY = {
     "高光瞬间": 100,
@@ -208,6 +211,218 @@ def choose_sentence_aware_overlap_cut(
     return best_cut
 
 
+def _find_sentence_containing_boundary(
+    boundary: float,
+    sentences: List[Dict[str, Any]],
+    epsilon: float = BOUNDARY_EPSILON,
+) -> Optional[Dict[str, Any]]:
+    for sent in sentences:
+        try:
+            start = float(sent["start"])
+            end = float(sent["end"])
+        except Exception:
+            continue
+        if start + epsilon < boundary < end - epsilon:
+            return sent
+    return None
+
+
+def _find_sentence_ending_near_boundary(
+    boundary: float,
+    sentences: List[Dict[str, Any]],
+    tolerance: float = SENTENCE_END_NEAR_TOLERANCE,
+) -> Optional[Dict[str, Any]]:
+    best: Optional[Dict[str, Any]] = None
+    best_delta = float("inf")
+    for sent in sentences:
+        try:
+            end = float(sent["end"])
+        except Exception:
+            continue
+        delta = boundary - end
+        if 0.0 <= delta <= tolerance and delta < best_delta:
+            best = sent
+            best_delta = delta
+    return best
+
+
+def _next_sentence_start_after(sent_end: float, sentences: List[Dict[str, Any]]) -> Optional[float]:
+    starts: List[float] = []
+    for sent in sentences:
+        try:
+            start = float(sent["start"])
+        except Exception:
+            continue
+        if start > sent_end + BOUNDARY_EPSILON:
+            starts.append(start)
+    return min(starts) if starts else None
+
+
+def _snap_forward_out_of_activity(
+    cut_point: float,
+    activity_timestamps: List[Tuple[float, float]],
+    max_cut: float,
+) -> float:
+    """If a proposed cut lands inside singing/activity, move it to activity end."""
+    best = float(cut_point)
+    for start, end in activity_timestamps or []:
+        try:
+            a_start = float(start)
+            a_end = float(end)
+        except Exception:
+            continue
+        if a_start + BOUNDARY_EPSILON < best < a_end - BOUNDARY_EPSILON:
+            best = min(float(max_cut), a_end)
+    return best
+
+
+def _snap_backward_out_of_activity(
+    cut_point: float,
+    activity_timestamps: List[Tuple[float, float]],
+    min_cut: float,
+) -> float:
+    """If a proposed cut lands inside singing/activity, move it to activity start."""
+    best = float(cut_point)
+    for start, end in activity_timestamps or []:
+        try:
+            a_start = float(start)
+            a_end = float(end)
+        except Exception:
+            continue
+        if a_start + BOUNDARY_EPSILON < best < a_end - BOUNDARY_EPSILON:
+            best = max(float(min_cut), a_start)
+    return best
+
+
+def choose_sentence_complete_adjacent_cut(
+    prev_item: Dict[str, Any],
+    next_item: Dict[str, Any],
+    sentence: Dict[str, Any],
+    boundary: float,
+    min_duration: float,
+    max_duration: float,
+    logger: Optional[logging.Logger] = None,
+) -> Optional[float]:
+    """Move an adjacent boundary out of a subtitle sentence.
+
+    Overlap normalization only handles segments that overlap. This helper fixes
+    the separate case where two adjacent segments share a boundary that falls
+    inside one lyric sentence, which otherwise creates a visibly/audibly cut
+    final line.
+    """
+    try:
+        sent_start = float(sentence["start"])
+        sent_end = float(sentence["end"])
+    except Exception:
+        return None
+
+    if sent_end <= sent_start:
+        return None
+
+    sent_len = sent_end - sent_start
+    prev_cover = max(0.0, boundary - sent_start)
+    # If the lyric has already noticeably started in the previous clip, keep
+    # it there and extend to sentence end. Otherwise hand the whole sentence to
+    # the next clip.
+    previous_owns_sentence = prev_cover >= min(0.35, sent_len * 0.30)
+
+    candidates: List[Tuple[int, float, float, float, str]] = []
+
+    def add_candidate(cut_point: float, base_score: float, reason: str) -> None:
+        candidate = _candidate_score(
+            prev_item,
+            next_item,
+            cut_point,
+            boundary,
+            min_duration,
+            max_duration,
+            base_score,
+            reason,
+        )
+        if candidate is not None:
+            candidates.append(candidate)
+
+    add_candidate(
+        sent_end,
+        0.0 if previous_owns_sentence else 2.0,
+        "complete_sentence_to_prev",
+    )
+    add_candidate(
+        sent_start,
+        0.0 if not previous_owns_sentence else 2.5,
+        "complete_sentence_to_next",
+    )
+
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda item: (item[0], item[1], item[2]))
+    hard_rank, best_score, _, best_cut, reason = candidates[0]
+    if abs(best_cut - boundary) <= BOUNDARY_EPSILON:
+        return None
+    if logger:
+        logger.info(
+            "[export sentence-boundary] move cut %.2f->%.2f reason=%s hard=%s score=%.2f sentence=(%.2f-%.2f)",
+            boundary,
+            best_cut,
+            reason,
+            hard_rank == 0,
+            best_score,
+            sent_start,
+            sent_end,
+        )
+    return best_cut
+
+
+def choose_sentence_tail_padding_cut(
+    prev_item: Dict[str, Any],
+    next_item: Dict[str, Any],
+    sentence: Dict[str, Any],
+    next_sentence_start: Optional[float],
+    boundary: float,
+    min_duration: float,
+    max_duration: float,
+    logger: Optional[logging.Logger] = None,
+) -> Optional[float]:
+    """Add a tiny tail pad when a cut is exactly at an ASR sentence end."""
+    try:
+        sent_end = float(sentence["end"])
+    except Exception:
+        return None
+
+    padded_cut = sent_end + SENTENCE_TAIL_PADDING
+    if next_sentence_start is not None:
+        padded_cut = min(padded_cut, max(sent_end, next_sentence_start - BOUNDARY_EPSILON))
+    if padded_cut <= boundary + BOUNDARY_EPSILON:
+        return None
+
+    candidate = _candidate_score(
+        prev_item,
+        next_item,
+        padded_cut,
+        boundary,
+        min_duration,
+        max_duration,
+        0.5,
+        "sentence_end_tail_pad",
+    )
+    if candidate is None:
+        return None
+
+    hard_rank, best_score, _, best_cut, reason = candidate
+    if logger:
+        logger.info(
+            "[export sentence-boundary] move cut %.2f->%.2f reason=%s hard=%s score=%.2f sentence_end=%.2f",
+            boundary,
+            best_cut,
+            reason,
+            hard_rank == 0,
+            best_score,
+            sent_end,
+        )
+    return best_cut
+
+
 def _merge_items(left: Dict[str, Any], right: Dict[str, Any]) -> Dict[str, Any]:
     merged = dict(left)
     merged["start"] = min(float(left["start"]), float(right["start"]))
@@ -230,6 +445,7 @@ def _repair_short_segments(
     min_duration: float,
     max_duration: float,
     overlap_tolerance: float,
+    activity_timestamps: Optional[List[Tuple[float, float]]],
     logger: Optional[logging.Logger],
 ) -> List[Dict[str, Any]]:
     if len(segments) <= 1:
@@ -253,6 +469,33 @@ def _repair_short_segments(
         missing = min_duration - duration
         fixed = False
 
+        if i + 1 < len(items):
+            next_item = items[i + 1]
+            gap = float(next_item["start"]) - float(item["end"])
+            next_duration = float(next_item["end"]) - float(next_item["start"])
+            if gap <= overlap_tolerance and next_duration > BOUNDARY_EPSILON and activity_timestamps:
+                target_end = float(item["end"]) + missing
+                max_target_end = min(float(item["start"]) + max_duration, float(next_item["end"]) - BOUNDARY_EPSILON)
+                target_end = min(target_end, max_target_end)
+                snapped_end = _snap_forward_out_of_activity(
+                    target_end,
+                    activity_timestamps or [],
+                    max_target_end,
+                )
+                if snapped_end > target_end + BOUNDARY_EPSILON:
+                    item["end"] = round(snapped_end, 3)
+                    next_item["start"] = item["end"]
+                    fixed = True
+
+            if fixed and logger:
+                logger.info("[export duration] repaired short segment to %.2fs", float(item["end"]) - float(item["start"]))
+
+        if fixed:
+            i = max(0, i - 1)
+            continue
+
+        # Legacy conservative repair: only borrow exact missing duration if the
+        # neighbor can still satisfy the minimum duration immediately.
         if i + 1 < len(items):
             next_item = items[i + 1]
             gap = float(next_item["start"]) - float(item["end"])
@@ -329,6 +572,7 @@ def normalize_export_segment_overlaps(
     min_duration: float,
     max_duration: float,
     cached_asr_results: Optional[Dict[int, dict]] = None,
+    activity_timestamps: Optional[List[Tuple[float, float]]] = None,
     overlap_tolerance: float = DEFAULT_OVERLAP_TOLERANCE,
     logger: Optional[logging.Logger] = None,
 ) -> List[Dict[str, Any]]:
@@ -386,12 +630,74 @@ def normalize_export_segment_overlaps(
                 float(next_item["start"]),
             )
 
+    for idx in range(len(normalized) - 1):
+        prev_item = normalized[idx]
+        next_item = normalized[idx + 1]
+        prev_end = float(prev_item["end"])
+        next_start = float(next_item["start"])
+        gap = next_start - prev_end
+        if abs(gap) > ADJACENT_BOUNDARY_TOLERANCE:
+            continue
+
+        prev_song = prev_item.get("song")
+        next_song = next_item.get("song")
+        prev_song_index = int(getattr(prev_song, "song_index", -1))
+        next_song_index = int(getattr(next_song, "song_index", -2))
+        if prev_song_index != next_song_index:
+            continue
+
+        if prev_song_index not in sentence_cache:
+            sentence_cache[prev_song_index] = build_global_asr_sentences(prev_song, cached_asr_results)
+
+        boundary = (prev_end + next_start) / 2.0
+        sentences = sentence_cache.get(prev_song_index, [])
+        sentence = _find_sentence_containing_boundary(boundary, sentences)
+        if sentence:
+            cut_point = choose_sentence_complete_adjacent_cut(
+                prev_item,
+                next_item,
+                sentence,
+                boundary,
+                min_duration,
+                max_duration,
+                logger=logger,
+            )
+        else:
+            sentence = _find_sentence_ending_near_boundary(boundary, sentences)
+            cut_point = (
+                choose_sentence_tail_padding_cut(
+                    prev_item,
+                    next_item,
+                    sentence,
+                    _next_sentence_start_after(float(sentence["end"]), sentences) if sentence else None,
+                    boundary,
+                    min_duration,
+                    max_duration,
+                    logger=logger,
+                )
+                if sentence
+                else None
+            )
+        if cut_point is None:
+            continue
+
+        prev_item["end"] = round(float(cut_point), 3)
+        next_item["start"] = round(float(cut_point), 3)
+        fixed_count += 1
+
     final_segments = [
         seg
         for seg in normalized
         if float(seg["end"]) > float(seg["start"]) + BOUNDARY_EPSILON
     ]
-    final_segments = _repair_short_segments(final_segments, min_duration, max_duration, overlap_tolerance, logger)
+    final_segments = _repair_short_segments(
+        final_segments,
+        min_duration,
+        max_duration,
+        overlap_tolerance,
+        activity_timestamps,
+        logger,
+    )
 
     remaining_overlaps = _remaining_overlaps(final_segments, overlap_tolerance)
     if fixed_count and logger:

@@ -118,6 +118,7 @@ class LiveVideoProcessor:
         self._disable_song_identify: bool = True
         self._disable_lyrics_identify: bool = True
         self._cached_asr_results: Dict[int, dict] = {}  # {song_index: doubao_asr_result}
+        self._last_aed_singing_timestamps: List[Tuple[float, float]] = []
         self._gpu_task_lock = _GPU_HEAVY_TASK_LOCK
 
     def _try_get_cuda_memory_stats(self) -> Optional[Dict[str, float]]:
@@ -464,6 +465,7 @@ class LiveVideoProcessor:
             # 创建歌曲结构（SongFormer 分析）
             logger.info("准备调用 _create_songs...")
             self._cached_asr_results = {}  # 清除ASR缓存
+            self._last_aed_singing_timestamps = []
             songs = self._create_songs(
                 song_boundaries,
                 audio_path,
@@ -605,6 +607,7 @@ class LiveVideoProcessor:
                 mode=self.config.cut_mode,
                 video_info=cached_video_info,
                 output_spec=output_spec,
+                safety_margin=0.0,
             )
             if not cut_result.success:
                 logger.warning(f"clip failed, skipped: {output_path} - {cut_result.error_message}")
@@ -1600,6 +1603,7 @@ class LiveVideoProcessor:
             min_duration,
             max_duration,
             cached_asr_results=getattr(self, "_cached_asr_results", {}) or {},
+            activity_timestamps=getattr(self, "_last_aed_singing_timestamps", []) or [],
             overlap_tolerance=overlap_tolerance,
             logger=logger,
         )
@@ -3003,6 +3007,7 @@ class LiveVideoProcessor:
                         singing_ts = aed_result.get('event2timestamps', {}).get('singing', [])
                         speech_ts = aed_result.get('event2timestamps', {}).get('speech', [])
                         music_ts = aed_result.get('event2timestamps', {}).get('music', [])
+                        self._last_aed_singing_timestamps = list(singing_ts or [])
                         logger.info(f"[AED] singing={len(singing_ts)}段, speech={len(speech_ts)}段, music={len(music_ts)}段")
                         logger.info(f"[AED] singing_ts={singing_ts[:3]}, speech_ts={speech_ts[:3]}")
                         if singing_ts or speech_ts:
@@ -3699,6 +3704,7 @@ class LiveVideoProcessor:
                     mode=self.config.cut_mode,
                     video_info=cached_video_info,  # 优化#4
                     output_spec=self._resolve_output_spec(video_path, cached_video_info),
+                    safety_margin=0.0,
                 )
                 if not cut_result.success:
                     logger.warning(
@@ -3815,6 +3821,7 @@ class LiveVideoProcessor:
                 mode=self.config.cut_mode,
                 video_info=cached_video_info,
                 output_spec=self._resolve_output_spec(video_path, cached_video_info),
+                safety_margin=0.0,
             )
             if not cut_result.success:
                 logger.warning(f"clip failed, skipped: {output_path} - {cut_result.error_message}")
