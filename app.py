@@ -22,6 +22,16 @@ from src.doubao_api import DoubaoASR, format_result
 from src.temp_manager import get_temp_manager
 from src.runtime_config import get_doubao_credentials, get_runtime_config_path
 from src.slicing_ui import build_slicing_processing_config, detect_songformer_device
+from src.path_utils import normalize_pasted_local_path
+from src.slicing_preview import build_preview_cache_key, generate_segment_preview
+from src.slicing_state import (
+    apply_segment_edit as apply_segment_edit_state,
+    init_slicing_workflow_state,
+    rebuild_flat_segments_from_export_segments as rebuild_flat_segments_from_export_payload,
+    reset_segment_edits,
+    reset_slicing_workflow_state,
+    sync_ui_segments_to_export_segments,
+)
 from src.subtitle_export import (
     DEFAULT_SUBTITLE_MAX_CHARS,
     escape_ass_text,
@@ -961,26 +971,7 @@ def render_slicing_mode():
         return
 
     # 初始化工作流 session state
-    if 'slice_workflow_step' not in st.session_state:
-        st.session_state.slice_workflow_step = 0
-    if 'slice_video_source' not in st.session_state:
-        st.session_state.slice_video_source = None
-    if 'slice_analysis_result' not in st.session_state:
-        st.session_state.slice_analysis_result = None
-    if 'slice_output_files' not in st.session_state:
-        st.session_state.slice_output_files = None
-    if 'slice_export_segments' not in st.session_state:
-        st.session_state.slice_export_segments = None
-    if 'slice_segments' not in st.session_state:
-        st.session_state.slice_segments = []
-    if 'slice_selected_segment' not in st.session_state:
-        st.session_state.slice_selected_segment = None
-    if 'slice_jump_to_time' not in st.session_state:
-        st.session_state.slice_jump_to_time = None
-    if 'slice_auto_play_segment' not in st.session_state:
-        st.session_state.slice_auto_play_segment = None
-    if 'slice_processing_logs' not in st.session_state:
-        st.session_state.slice_processing_logs = []
+    init_slicing_workflow_state(st.session_state)
 
     # 工作流步骤定义（内部用 0-3，UI 显示 1-4）
     WORKFLOW_STEPS = {
@@ -1042,6 +1033,7 @@ def _render_step0_select_video():
     with col2:
         use_local = st.button("使用本地文件", use_container_width=True, key="slice_step0_use_local_btn")
 
+    local_path = normalize_pasted_local_path(local_path)
     video_source = None
     if local_path.strip() and os.path.exists(local_path.strip()):
         video_source = local_path.strip()
@@ -1326,24 +1318,7 @@ def _render_step1_processing():
 
 def _rebuild_flat_segments_from_export_segments(export_segments):
     """从导出片段恢复前端编辑用的扁平片段列表。"""
-    flat_segments = []
-    for idx, item in enumerate(export_segments or []):
-        export_type = item.get("type", "主歌")
-        flat_segments.append({
-            "id": f"seg_{idx:03d}",
-            "start": float(item.get("start", 0.0)),
-            "end": float(item.get("end", 0.0)),
-            "songformer_label": item.get("songformer_label", ""),
-            "current_label": export_type,
-            "_initial_label": export_type,
-            "is_highlight": bool(item.get("is_highlight", False)),
-            "confidence": getattr(item.get("segment"), "confidence", 0.9),
-            "modified": False,
-            "song_index": getattr(item.get("segment"), "song_index", 0),
-            "original_start": float(item.get("original_start", item.get("start", 0.0))),
-            "original_end": float(item.get("original_end", item.get("end", 0.0))),
-        })
-    return flat_segments
+    return rebuild_flat_segments_from_export_payload(export_segments)
 
 
 def _render_step2_preview_edit():
@@ -1387,10 +1362,7 @@ def _render_step2_preview_edit():
         output_spec = get_output_resolution_spec(video_source)
 
         # 检查缓存的预览视频是否是当前片段
-        cached_preview_key = (
-            f"preview_v2_{selected_idx}_{seg['start']:.2f}_{seg['end']:.2f}_"
-            f"{output_spec.width}x{output_spec.height}_fs90_mv240"
-        )
+        cached_preview_key = build_preview_cache_key(selected_idx, seg, output_spec)
         cached_preview_path = st.session_state.get(f"slice_preview_{selected_idx}_path")
         
         # 检查缓存是否有效
@@ -1411,81 +1383,29 @@ def _render_step2_preview_edit():
         
         # 没有缓存或缓存过期，生成新预览
         if not cached_preview_path:
-            # 检查是否有ASR缓存
-            cached_asr = st.session_state.get('slice_cached_asr_results', {})
-            songs = getattr(st.session_state.get('slice_analysis_result'), 'songs', [])
-            song_index = seg.get('song_index', 0)
-            
             try:
-                # 1. 先切原始视频（不带字幕）
-                from src.ffmpeg_processor import FFmpegProcessor
-                from src.output_spec import build_cover_crop_filter, build_ass_filter_value, resolve_output_resolution_spec, normalize_landscape_resolution_choice, DEFAULT_LANDSCAPE_RESOLUTION, OutputResolutionSpec
-                
-                ffmpeg = FFmpegProcessor()
-                temp_no_subtitle = temp_manager.get_preview_path(f"temp_preview_nosub_{selected_idx}.mp4")
-                
-                
-                # Preview should match the reviewed segment boundaries. Do not
-                # trim media to prevent subtitle bleed; clamp subtitle events
-                # instead so words near the boundary are not cut off.
-                safe_start = seg['start']
-                safe_end = seg['end']
-                
-                cut_result = ffmpeg.cut_video(
-                    video_source,
-                    safe_start,
-                    safe_end,
-                    temp_no_subtitle,
-                    mode="accurate",
+                preview_result = generate_segment_preview(
+                    video_source=video_source,
+                    segment=seg,
+                    selected_idx=selected_idx,
                     output_spec=output_spec,
-                    safety_margin=0.0,
+                    temp_manager=temp_manager,
+                    cached_asr_results=st.session_state.get('slice_cached_asr_results', {}),
+                    songs=getattr(st.session_state.get('slice_analysis_result'), 'songs', []),
+                    enable_subtitle=st.session_state.get('slice_enable_subtitle', False),
                 )
-                
-                if cut_result.success:
-                    # 2. 如果有字幕，再烧录
-                    temp_final = temp_no_subtitle
-                    if cached_asr and st.session_state.get('slice_enable_subtitle', False):
-                        # 找到该歌曲的ASR缓存
-                        cached = cached_asr.get(song_index)
-                        if cached and not cached.get('error'):
-                            # 找到该歌曲的start_time
-                            song_start_time = 0.0
-                            for song in songs:
-                                if getattr(song, 'song_index', -1) == song_index:
-                                    song_start_time = float(getattr(song, 'start_time', 0.0))
-                                    break
-                            
-                            # 计算相对于歌曲的时间
-                            relative_start = safe_start - song_start_time
-                            relative_end = safe_end - song_start_time
-                            
-                            # 调用processor的函数生成带字幕的视频
-                            from src.processor import LiveVideoProcessor, ProcessingConfig
-                            temp_subtitled = temp_manager.get_preview_path(f"temp_preview_sub_{selected_idx}.mp4")
-                            config = ProcessingConfig(
-                                output_dir=temp_manager.get_cache_path(""),
-                                enable_subtitle=True,
-                            )
-                            dummy_processor = LiveVideoProcessor(config)
-                            # 直接复用之前写的 _generate_subtitles_from_cached_asr
-                            result_ok, result_path = dummy_processor._generate_subtitles_from_cached_asr(
-                                temp_no_subtitle,
-                                cached,
-                                relative_start,
-                                relative_end,
-                                temp_subtitled,
-                                output_spec
-                            )
-                            if result_ok:
-                                temp_final = result_path
-                    
-                    # 3. 保存缓存
-                    video_to_use = temp_final
-                    st.session_state[f"slice_preview_{selected_idx}_path"] = temp_final
+                if preview_result.success and preview_result.path:
+                    video_to_use = preview_result.path
+                    st.session_state[f"slice_preview_{selected_idx}_path"] = preview_result.path
                     st.session_state[f"slice_preview_{selected_idx}_key"] = cached_preview_key
                     st.info(f"✅ 已生成片段 #{selected_idx+1} 的预览")
+                    if preview_result.subtitle_error:
+                        st.warning(f"⚠️ 预览字幕生成失败，已显示无字幕预览：{preview_result.subtitle_error}")
+                else:
+                    st.warning(f"⚠️ 生成切片预览失败：{preview_result.message}")
+                    use_dynamic_preview = False
+                    video_to_use = None
             except Exception as e:
-                import traceback
                 st.warning(f"⚠️ 生成切片预览失败：{e}")
                 use_dynamic_preview = False
                 video_to_use = None
@@ -1677,9 +1597,7 @@ def _render_step2_preview_edit():
 
     with col_reset:
         if st.button("🔄 重置所有修改", key="slice_step2_reset_btn"):
-            for seg in st.session_state.slice_segments:
-                seg['current_label'] = seg.get('_initial_label', seg['current_label'])
-                seg['modified'] = False
+            reset_segment_edits(st.session_state.slice_segments)
             st.success("✅ 已重置所有修改")
             st.rerun()
 
@@ -1807,36 +1725,14 @@ def _render_segment_editor(idx):
 
 def _apply_segment_edit(idx, new_label, new_start, new_end, new_sf_label=None):
     """应用片段编辑"""
-    segments = st.session_state.slice_segments
-    seg = segments[idx]
-
-    has_changes = (
-        new_label != seg['current_label'] or
-        abs(new_start - seg['start']) > 0.01 or
-        abs(new_end - seg['end']) > 0.01 or
-        (new_sf_label is not None and new_sf_label != seg.get('songformer_label', ''))
+    apply_segment_edit_state(
+        st.session_state.slice_segments,
+        idx,
+        new_label,
+        float(new_start),
+        float(new_end),
+        new_sf_label,
     )
-
-    if has_changes:
-        seg['current_label'] = new_label
-        seg['start'] = new_start
-        seg['end'] = new_end
-        if new_sf_label is not None:
-            seg['songformer_label'] = new_sf_label
-        seg['modified'] = True
-
-        # 调整相邻片段
-        if idx > 0:
-            prev_seg = segments[idx - 1]
-            if abs(new_start - prev_seg['end']) > 0.01:
-                prev_seg['end'] = new_start
-                prev_seg['modified'] = True
-
-        if idx < len(segments) - 1:
-            next_seg = segments[idx + 1]
-            if abs(new_end - next_seg['start']) > 0.01:
-                next_seg['start'] = new_end
-                next_seg['modified'] = True
 
 
 def _render_step3_export():
@@ -1899,22 +1795,12 @@ def _render_step3_export():
                 status_text = st.empty()
 
                 # 同步用户在 Step2 的编辑到 export_segments
-                songs_info = st.session_state.get('slice_songs_info', [])
-                for i, seg in enumerate(segments):
-                    if i < len(export_segments):
-                        export_segments[i]["start"] = seg['start']
-                        export_segments[i]["end"] = seg['end']
-                        export_segments[i]["type"] = seg['current_label']
-                        export_segments[i]["songformer_label"] = seg.get('songformer_label', '')
-                        
-                        # 更新歌曲名和歌手（如果用户修改了）
-                        seg_song_idx = seg.get('song_index', 0)
-                        for song_info in songs_info:
-                            if song_info.get('song_index', -1) == seg_song_idx:
-                                song_obj = export_segments[i].get('song')
-                                if song_obj:
-                                    song_obj.song_title = song_info.get('song_title', song_obj.song_title)
-                                    song_obj.song_artist = song_info.get('song_artist', song_obj.song_artist)
+                export_segments = sync_ui_segments_to_export_segments(
+                    segments,
+                    export_segments,
+                    st.session_state.get('slice_songs_info', []),
+                )
+                st.session_state.slice_export_segments = export_segments
 
                 # 获取配置（复用 Step1 的配置）
                 config_dict = st.session_state.slice_config
@@ -1966,14 +1852,7 @@ def _render_step3_export():
     with col_restart:
         if st.button("🔄 重新开始", key="slice_restart_btn"):
             # 重置所有工作流状态
-            st.session_state.slice_workflow_step = 0
-            st.session_state.slice_video_source = None
-            st.session_state.slice_analysis_result = None
-            st.session_state.slice_output_files = None
-            st.session_state.slice_export_segments = None
-            st.session_state.slice_segments = []
-            st.session_state.slice_selected_segment = None
-            st.session_state.slice_jump_to_time = None
+            reset_slicing_workflow_state(st.session_state)
             st.rerun()
 
 
@@ -2109,6 +1988,7 @@ def render_subtitle_mode():
             key="subtitle_use_local_file_btn",
         )
 
+    local_path = normalize_pasted_local_path(local_path)
     video_path = None
     if uploaded_file:
         # 保存上传的视频
