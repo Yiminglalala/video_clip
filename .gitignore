@@ -45,6 +45,10 @@ __pycache__/
 *.pyc
 .playwright-cli/
 
+# Local runtime state / generated caches
+slice_config.json
+.features_msaf_tmp.json
+
 # Local private runtime config
 local_config.json
 local_config.*.json

@@ -12,6 +12,7 @@ Live演唱会视频智能切片工具 - 主处理器 v3.0
 import os
 import sys
 import shutil
+import json
 import time
 import tempfile
 import uuid
@@ -118,7 +119,7 @@ class LiveVideoProcessor:
         self._disable_song_identify: bool = True
         self._disable_lyrics_identify: bool = True
         self._cached_asr_results: Dict[int, dict] = {}  # {song_index: doubao_asr_result}
-        self._last_aed_singing_timestamps: List[Tuple[float, float]] = []
+        self._last_asr_cache_dir: Optional[str] = None
         self._gpu_task_lock = _GPU_HEAVY_TASK_LOCK
 
     def _try_get_cuda_memory_stats(self) -> Optional[Dict[str, float]]:
@@ -465,7 +466,6 @@ class LiveVideoProcessor:
             # 创建歌曲结构（SongFormer 分析）
             logger.info("准备调用 _create_songs...")
             self._cached_asr_results = {}  # 清除ASR缓存
-            self._last_aed_singing_timestamps = []
             songs = self._create_songs(
                 song_boundaries,
                 audio_path,
@@ -498,6 +498,7 @@ class LiveVideoProcessor:
             export_segments: List[Dict[str, Any]] = []
             for song in result.songs:
                 export_segments.extend(self._build_export_segments_for_song(song, min_duration, max_duration))
+            self._persist_cached_asr_results(video_path, result.songs)
 
             # 烧录字幕到完整视频（如果启用字幕）
             subtitled_video_path = None
@@ -1057,8 +1058,91 @@ class LiveVideoProcessor:
                 "language": "zh",
                 "error": str(e)
             }
-        
+
         return result
+
+    def _json_safe_value(self, value: Any) -> Any:
+        """Convert ASR payload values to JSON-safe types without losing text."""
+        if isinstance(value, dict):
+            return {str(k): self._json_safe_value(v) for k, v in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [self._json_safe_value(v) for v in value]
+        if isinstance(value, np.ndarray):
+            return self._json_safe_value(value.tolist())
+        if isinstance(value, np.integer):
+            return int(value)
+        if isinstance(value, np.floating):
+            return float(value)
+        if isinstance(value, np.bool_):
+            return bool(value)
+        return value
+
+    def _persist_cached_asr_results(self, video_path: str, songs: List[SongInfo]) -> Optional[str]:
+        """Persist Doubao ASR cache for debugging and deterministic boundary review."""
+        if not self._cached_asr_results:
+            self._last_asr_cache_dir = None
+            return None
+
+        try:
+            video_stem = self._sanitize_filename_component(Path(video_path).stem, "video")
+            cache_root = (
+                Path(self.config.output_dir)
+                / "asr_cache"
+                / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{video_stem}"
+            )
+            cache_root.mkdir(parents=True, exist_ok=True)
+
+            index_payload: Dict[str, Any] = {
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+                "video_path": video_path,
+                "cache_dir": str(cache_root),
+                "songs": [],
+            }
+
+            for song in songs:
+                song_index = int(getattr(song, "song_index", 0))
+                asr_result = self._cached_asr_results.get(song_index)
+                if not asr_result:
+                    continue
+
+                filename = f"song_{song_index + 1:03d}.json"
+                payload = {
+                    "song_index": song_index,
+                    "song_name": getattr(song, "song_name", ""),
+                    "song_title": getattr(song, "song_title", ""),
+                    "song_artist": getattr(song, "song_artist", ""),
+                    "song_start": float(getattr(song, "start_time", 0.0)),
+                    "song_end": float(getattr(song, "end_time", 0.0)),
+                    "sentence_count": len(asr_result.get("sentences", []) or []),
+                    "word_count": len(asr_result.get("words", []) or []),
+                    "asr_result": self._json_safe_value(asr_result),
+                }
+                with open(cache_root / filename, "w", encoding="utf-8") as f:
+                    json.dump(payload, f, ensure_ascii=False, indent=2)
+
+                index_payload["songs"].append(
+                    {
+                        "song_index": song_index,
+                        "song_name": payload["song_name"],
+                        "song_title": payload["song_title"],
+                        "song_start": payload["song_start"],
+                        "song_end": payload["song_end"],
+                        "sentence_count": payload["sentence_count"],
+                        "word_count": payload["word_count"],
+                        "file": filename,
+                    }
+                )
+
+            with open(cache_root / "index.json", "w", encoding="utf-8") as f:
+                json.dump(index_payload, f, ensure_ascii=False, indent=2)
+
+            self._last_asr_cache_dir = str(cache_root)
+            logger.info("[Doubao] ASR cache persisted: %s", cache_root)
+            return self._last_asr_cache_dir
+        except Exception as e:
+            logger.warning("[Doubao] ASR cache persist failed: %s", e)
+            self._last_asr_cache_dir = None
+            return None
 
     def _compute_song_edge_signature(
         self,
@@ -1603,7 +1687,6 @@ class LiveVideoProcessor:
             min_duration,
             max_duration,
             cached_asr_results=getattr(self, "_cached_asr_results", {}) or {},
-            activity_timestamps=getattr(self, "_last_aed_singing_timestamps", []) or [],
             overlap_tolerance=overlap_tolerance,
             logger=logger,
         )
@@ -3007,7 +3090,6 @@ class LiveVideoProcessor:
                         singing_ts = aed_result.get('event2timestamps', {}).get('singing', [])
                         speech_ts = aed_result.get('event2timestamps', {}).get('speech', [])
                         music_ts = aed_result.get('event2timestamps', {}).get('music', [])
-                        self._last_aed_singing_timestamps = list(singing_ts or [])
                         logger.info(f"[AED] singing={len(singing_ts)}段, speech={len(speech_ts)}段, music={len(music_ts)}段")
                         logger.info(f"[AED] singing_ts={singing_ts[:3]}, speech_ts={speech_ts[:3]}")
                         if singing_ts or speech_ts:
