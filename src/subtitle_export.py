@@ -10,6 +10,30 @@ DEFAULT_SUBTITLE_MIN_TAIL_CHARS = 4
 SUBTITLE_SPLIT_PUNCTUATIONS = "。！？、，；：,.;:!? "
 
 
+def get_first_subtitle_probe_time(asr_result: dict, default_duration: float = 1.0) -> float | None:
+    """Return a representative timestamp where a generated subtitle should be visible."""
+    if not isinstance(asr_result, dict):
+        return None
+
+    items = asr_result.get("sentences") or asr_result.get("words") or []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        text = (item.get("text") or item.get("word") or "").strip()
+        if not text:
+            continue
+        try:
+            start = float(item.get("start", 0.0) or 0.0)
+            end = float(item.get("end", start + default_duration) or (start + default_duration))
+        except (TypeError, ValueError):
+            continue
+        if end <= start:
+            end = start + default_duration
+        return max(0.0, start + (end - start) * 0.5)
+
+    return None
+
+
 def find_subtitle_split_index(text: str, max_chars: int = DEFAULT_SUBTITLE_MAX_CHARS) -> int:
     value = str(text or "")
     if len(value) <= max_chars:

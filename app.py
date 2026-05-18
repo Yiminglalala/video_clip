@@ -37,6 +37,7 @@ from src.subtitle_export import (
     escape_ass_text,
     find_subtitle_split_index,
     format_ass_time,
+    get_first_subtitle_probe_time,
     split_subtitle_sentence_entry,
 )
 from src.output_spec import (
@@ -727,15 +728,40 @@ def generate_video_with_subtitles(
             return False, "No usable ASR text"
     else:
         return False, "没有可用的识别文本"
-    
+
     # 调用通用的字幕烧录函数
     result = burn_subtitle_from_file(video_path, ass_path, output_path, output_spec=output_spec, orientation=orientation)
     
     # 清理临时ASS文件
     if os.path.exists(ass_path):
         os.remove(ass_path)
-    
+
     return result
+
+
+def extract_subtitle_probe_frame(video_path: str, frame_path: str, timestamp: float) -> tuple[bool, str]:
+    """Extract a frame at subtitle timestamp so the UI can verify burned subtitles visually."""
+    os.makedirs(os.path.dirname(os.path.abspath(frame_path)), exist_ok=True)
+    cmd = [
+        "ffmpeg", "-y",
+        "-ss", f"{max(0.0, float(timestamp)):.3f}",
+        "-i", video_path,
+        "-frames:v", "1",
+        "-q:v", "2",
+        frame_path,
+    ]
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="ignore", timeout=60)
+    except subprocess.TimeoutExpired:
+        return False, "抽帧超时"
+    except Exception as exc:
+        return False, str(exc)
+
+    if r.returncode != 0:
+        return False, (r.stderr or "FFmpeg 抽帧失败")[-500:]
+    if not os.path.exists(frame_path) or os.path.getsize(frame_path) <= 0:
+        return False, "抽帧文件未生成"
+    return True, frame_path
 
 
 def detect_orientation(video_path: str) -> str:
@@ -2072,19 +2098,35 @@ def render_subtitle_mode():
                     orientation=orientation,
                     subtitle_mode=st.session_state.subtitle_mode
                 )
-                
+
                 if success:
                     add_log(f"处理完成! 输出文件: {output_name}")
                     st.session_state.last_result = result
-                    
+
                     # 显示处理结果
                     st.markdown("### 🎉 处理完成")
                     st.success(f"字幕生成成功！")
-                    
+
                     # 显示输出视频
                     st.markdown("### 📺 输出视频")
                     st.video(output_path)
-                    
+
+                    probe_time = get_first_subtitle_probe_time(asr_result)
+                    if probe_time is not None:
+                        probe_frame_path = temp_manager.get_cache_path(f"{base_name}_subtitle_probe.jpg")
+                        ok, probe_result = extract_subtitle_probe_frame(output_path, probe_frame_path, probe_time)
+                        if ok:
+                            add_log(f"字幕可见性抽帧完成: {probe_time:.2f}s")
+                            st.markdown("### 🔎 字幕可见性抽帧")
+                            st.caption(f"抽取第一条字幕中点时间 {probe_time:.2f}s，用于确认字幕是否实际烧录到画面。")
+                            st.image(probe_result, width="stretch")
+                        else:
+                            add_log(f"字幕可见性抽帧失败: {probe_result}")
+                            st.warning(f"字幕视频已生成，但抽帧验证失败: {probe_result}")
+                    else:
+                        add_log("未找到可用于抽帧验证的字幕时间点")
+                        st.warning("字幕视频已生成，但 ASR 未返回可用于抽帧验证的字幕时间点。")
+
                     # 提供下载按钮
                     with open(output_path, "rb") as f:
                         st.download_button(
@@ -2105,17 +2147,26 @@ def render_subtitle_mode():
 
 
 def main():
-    """主函数：双 Tab（切片 + 字幕）。"""
+    """主函数：双模式（切片 + 字幕），使用可持久化选择避免 rerun 后跳页。"""
     render_header()
 
     render_sidebar()
 
-    tab1, tab2 = st.tabs(["🎬 视频切片", "🎤 字幕生成"])
+    mode_options = ["🎬 视频切片", "🎤 字幕生成"]
+    if st.session_state.get("main_mode") not in mode_options:
+        st.session_state.main_mode = mode_options[0]
 
-    with tab1:
+    current_mode = st.radio(
+        "功能模式",
+        mode_options,
+        horizontal=True,
+        key="main_mode",
+        label_visibility="collapsed",
+    )
+
+    if current_mode == "🎬 视频切片":
         render_slicing_mode()
-
-    with tab2:
+    else:
         render_subtitle_mode()
 
     # 底部信息

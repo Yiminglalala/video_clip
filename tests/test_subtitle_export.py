@@ -2,7 +2,11 @@
 
 import unittest
 
-from src.subtitle_export import DEFAULT_SUBTITLE_MAX_CHARS, split_subtitle_sentence_entry
+from src.subtitle_export import (
+    DEFAULT_SUBTITLE_MAX_CHARS,
+    get_first_subtitle_probe_time,
+    split_subtitle_sentence_entry,
+)
 
 
 class SubtitleExportTests(unittest.TestCase):
@@ -32,6 +36,25 @@ class SubtitleExportTests(unittest.TestCase):
         lengths = [len(item["text"]) for item in chunks]
         self.assertEqual(lengths, [6, 5])
         self.assertTrue(all(length >= 4 for length in lengths))
+
+    def test_first_subtitle_probe_time_uses_first_sentence_midpoint(self):
+        asr_result = {
+            "sentences": [
+                {"text": "heaven", "start": 0.16, "end": 1.14},
+                {"text": "next", "start": 2.0, "end": 3.0},
+            ],
+            "words": [{"word": "fallback", "start": 8.0, "end": 9.0}],
+        }
+
+        self.assertAlmostEqual(get_first_subtitle_probe_time(asr_result), 0.65, places=2)
+
+    def test_first_subtitle_probe_time_falls_back_to_words(self):
+        asr_result = {
+            "sentences": [],
+            "words": [{"word": "fallback", "start": 2.0, "end": 4.0}],
+        }
+
+        self.assertAlmostEqual(get_first_subtitle_probe_time(asr_result), 3.0, places=2)
 
 
 if __name__ == "__main__":
