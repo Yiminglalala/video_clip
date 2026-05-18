@@ -15,6 +15,8 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
 
+from src.project_paths import OUTPUT_CACHE_DIR
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,11 +30,11 @@ class SubtitleCache:
         初始化缓存管理器
         
         Args:
-            cache_dir: 缓存存储目录，默认在项目目录下创建 .subtitle_cache
+            cache_dir: 缓存存储目录，默认在 output/cache/subtitle
             expire_days: 缓存过期天数，默认30天
         """
         if cache_dir is None:
-            cache_dir = Path(__file__).parent.parent / ".subtitle_cache"
+            cache_dir = OUTPUT_CACHE_DIR / "subtitle"
         
         self.cache_dir = Path(cache_dir)
         self.expire_days = expire_days

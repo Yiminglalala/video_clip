@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Debug: test file uploader vs text path approach."""
 from playwright.sync_api import sync_playwright
 import os
@@ -23,7 +23,7 @@ with sync_playwright() as p:
             t.click()
             break
     page.wait_for_timeout(2000)
-    page.screenshot(path="D:/video_clip/output/playwright/debug_a1.png")
+    page.screenshot(path="D:/video_clip/output/qa/playwright/debug_a1.png")
 
     # === APPROACH 1: Text input + use_local ===
     print("\n=== [2] Test text input approach ===")
@@ -49,7 +49,7 @@ with sync_playwright() as p:
                 break
 
         if clicked:
-            page.screenshot(path="D:/video_clip/output/playwright/debug_a2.png")
+            page.screenshot(path="D:/video_clip/output/qa/playwright/debug_a2.png")
             body = page.inner_text("body")
             if "时长" in body:
                 print("SUCCESS: Video info shown!")
@@ -91,7 +91,7 @@ with sync_playwright() as p:
                 print(f"  Failed on [{i}]: {e}")
 
         page.wait_for_timeout(5000)
-        page.screenshot(path="D:/video_clip/output/playwright/debug_a3.png")
+        page.screenshot(path="D:/video_clip/output/qa/playwright/debug_a3.png")
         body = page.inner_text("body")
         if "时长" in body:
             print("SUCCESS: Video info shown via file upload!")

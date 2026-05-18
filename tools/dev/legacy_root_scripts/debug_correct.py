@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Focused debug - correct tab1 input selection."""
 from playwright.sync_api import sync_playwright
 import os
@@ -50,7 +50,7 @@ with sync_playwright() as p:
                 break
 
         if clicked:
-            page.screenshot(path="D:/video_clip/output/playwright/debug_correct.png")
+            page.screenshot(path="D:/video_clip/output/qa/playwright/debug_correct.png")
             body = page.inner_text("body")
             lines = [l.strip() for l in body.split("\n") if l.strip()]
             print("\nKey lines after click:")

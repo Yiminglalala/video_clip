@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Fresh session test: verify the complete workflow from step 0 to step 3."""
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 
@@ -6,7 +6,7 @@ APP_URL = "http://localhost:8507"
 TEST_VIDEO = r"D:\video_clip\test_chenchusheng_10min.mp4"
 
 def screenshot(page, name):
-    path = f"D:/video_clip/output/playwright/e2e_fresh_{name}.png"
+    path = f"D:/video_clip/output/qa/playwright/e2e_fresh_{name}.png"
     page.screenshot(path=path)
     print(f"  [screenshot] {path}")
     return path

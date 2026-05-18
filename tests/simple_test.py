@@ -1,4 +1,4 @@
-"""
+﻿"""
 简单测试脚本 - 打开页面并截图
 """
 import asyncio
@@ -11,9 +11,9 @@ async def test_simple():
         
         await page.goto("http://localhost:8505")
         await page.wait_for_load_state("networkidle")
-        await page.screenshot(path="output/playwright/current_page.png")
+        await page.screenshot(path="output/qa/playwright/current_page.png")
         
-        print("✅ 截图已保存到 output/playwright/current_page.png")
+        print("✅ 截图已保存到 output/qa/playwright/current_page.png")
         
         # 等待查看
         await page.wait_for_timeout(5000)

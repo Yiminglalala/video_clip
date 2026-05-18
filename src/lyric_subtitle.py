@@ -25,15 +25,14 @@ import threading
 import time
 from dataclasses import dataclass
 from difflib import SequenceMatcher
-from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 import requests
 
+from src.project_paths import OUTPUT_CACHE_DIR
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-CACHE_DIR = PROJECT_ROOT / "output" / "cache"
+CACHE_DIR = OUTPUT_CACHE_DIR / "lyrics"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 CACHE_DB = CACHE_DIR / "lyrics_cache.sqlite3"
 

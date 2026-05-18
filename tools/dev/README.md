@@ -1,6 +1,8 @@
 # 开发脚本归档说明
 
-根目录仍保留了一批历史 `debug_*.py`、`diagnostic_*.py`、`run_*.py` 和临时 `test_*.py` 脚本，当前不直接迁移，避免破坏已有手工排查入口。
+根目录历史 `debug_*.py`、`diagnostic_*.py`、`run_*.py` 和临时 `test_*.py` 脚本已迁移到 `tools/dev/legacy_root_scripts/`。
+
+这些脚本只作为历史排查入口保留，不参与发布门禁。稳定回归测试以 `tests/` 目录为准。
 
 后续清理规则：
 

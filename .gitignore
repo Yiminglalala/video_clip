@@ -39,11 +39,13 @@ tmp/
 *.log
 .DS_Store
 .cache/
+.local_state/
 .subtitle_cache/
 .trae/
 __pycache__/
 *.pyc
 .playwright-cli/
+logs/
 
 # Local runtime state / generated caches
 slice_config.json

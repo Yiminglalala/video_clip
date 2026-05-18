@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Verify start button click and capture state."""
 from playwright.sync_api import sync_playwright
 
@@ -30,7 +30,7 @@ with sync_playwright() as p:
             break
     page.wait_for_timeout(3000)
 
-    page.screenshot(path="D:/video_clip/output/playwright/debug_step1_ready.png")
+    page.screenshot(path="D:/video_clip/output/qa/playwright/debug_step1_ready.png")
 
     print("=== All buttons on step1 ===")
     for btn in page.query_selector_all("button"):
@@ -51,7 +51,7 @@ with sync_playwright() as p:
             btn.click()
             print("  Clicked!")
             page.wait_for_timeout(2000)
-            page.screenshot(path="D:/video_clip/output/playwright/debug_after_click.png")
+            page.screenshot(path="D:/video_clip/output/qa/playwright/debug_after_click.png")
             body = page.inner_text("body")
             lines = [l.strip() for l in body.split("\n") if l.strip()]
             print("\n=== Key lines after click ===")

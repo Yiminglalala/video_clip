@@ -45,7 +45,7 @@
 
 ### 4.3 输入与证据
 - **输入视频/样本**：输入视频路径或样本，如"D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (17).mp4"
-- **复现步骤**：详细的复现步骤，如"1.运行test_only_video2.py 2.查看45-56秒的识别结果"
+- **复现步骤**：详细的复现步骤，如"1.运行 tools/dev/legacy_root_scripts/test_only_video2.py 2.查看45-56秒的识别结果"
 - **日志片段**：关键日志片段，如"[REFINE-DEBUG] [43.9-56.4] orig_label=尾奏, top=verse(8.8) audience=0.0"
 - **截图/产物路径**：截图路径或输出产物路径，如"d:\video_clip\output\test_all_videos\周深_20260418_0845\"
 
@@ -95,7 +95,7 @@
 #### 4.3 输入与证据
 - **输入视频/样本**: D:\个人资料\音乐测试\视频素材\live\周深\周深-VX-q97643800 (17).mp4
 - **复现步骤**:
-  1. 运行test_only_video2.py
+  1. 运行 `tools/dev/legacy_root_scripts/test_only_video2.py`
   2. 查看45-56秒的识别结果
 - **日志片段**:
   ```

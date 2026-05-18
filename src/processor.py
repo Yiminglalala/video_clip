@@ -49,6 +49,7 @@ from src.output_spec import (
     normalize_landscape_resolution_choice,
     resolve_output_resolution_spec,
 )
+from src.project_paths import VIDEO_OUTPUT_DIR
 from src.segment_postprocess import build_global_asr_sentences, normalize_export_segment_overlaps
 
 logger = logging.getLogger(__name__)
@@ -59,7 +60,7 @@ _GPU_HEAVY_TASK_LOCK = threading.Lock()
 @dataclass
 class ProcessingConfig:
     """处理配置"""
-    output_dir: str = r"D:\video_clip\output"
+    output_dir: str = str(VIDEO_OUTPUT_DIR)
     min_segment_duration: float = 8.0  # 最小片段时长(秒)
     max_segment_duration: float = 15.0   # 最大片段时长(秒)
     enhance_audio: bool = True
@@ -3960,7 +3961,7 @@ def main():
     parser.add_argument('video', help='视频文件路径')
     parser.add_argument('-s', '--singer', help='歌手名称')
     parser.add_argument('-m', '--min-duration', type=float, default=8.0, help='最小片段时长(秒)')
-    parser.add_argument('-o', '--output', default=r'D:\video_clip\output', help='输出目录')
+    parser.add_argument('-o', '--output', default=str(VIDEO_OUTPUT_DIR), help='输出目录')
     
     args = parser.parse_args()
     

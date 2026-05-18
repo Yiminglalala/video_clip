@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Quick check: what's on the page after 5 minutes of processing?"""
 from playwright.sync_api import sync_playwright
 import os, time
@@ -29,7 +29,7 @@ with sync_playwright() as p:
             print(f"  {repr(l[:80])}")
 
     # Screenshot
-    page.screenshot(path="D:/video_clip/output/playwright/e2e_state_check.png")
+    page.screenshot(path="D:/video_clip/output/qa/playwright/e2e_state_check.png")
     print("Screenshot saved.")
 
     # Check for any error alerts

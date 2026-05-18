@@ -1,4 +1,4 @@
-"""
+﻿"""
 简单测试 - 分析输入框布局
 """
 import asyncio
@@ -17,7 +17,7 @@ async def test_inputs():
         await page.click("text=🎬 视频切片")
         await page.wait_for_timeout(2000)
         
-        await page.screenshot(path="output/playwright/debug_tab.png")
+        await page.screenshot(path="output/qa/playwright/debug_tab.png")
         
         # 列出所有文本输入框的位置
         all_text_inputs = page.locator("div[data-testid='stTextInput']")
@@ -30,7 +30,7 @@ async def test_inputs():
                 # 截图这个输入框
                 await txt_input.scroll_into_view_if_needed()
                 await page.wait_for_timeout(500)
-                await txt_input.screenshot(path=f"output/playwright/debug_input_{i}.png")
+                await txt_input.screenshot(path=f"output/qa/playwright/debug_input_{i}.png")
                 
                 # 查找附近的标签
                 parent = txt_input.locator("xpath=ancestor::div[contains(@class, 'stTextInput')]")
@@ -49,7 +49,7 @@ async def test_inputs():
             except Exception as e:
                 print(f"填输入框 #{i} 错误: {e}")
         
-        await page.screenshot(path="output/playwright/debug_filled.png")
+        await page.screenshot(path="output/qa/playwright/debug_filled.png")
         
         # 最后关闭
         await page.wait_for_timeout(5000)

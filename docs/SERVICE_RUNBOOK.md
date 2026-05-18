@@ -48,7 +48,7 @@ foreach($p in $procs){
 ### Step 2. 再启动新进程
 
 ```powershell
-$logDir='D:\video_clip\tmp\logs'
+$logDir='D:\video_clip\logs'
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 
 $out=Join-Path $logDir 'streamlit_8501.out.log'
@@ -112,8 +112,8 @@ Get-CimInstance Win32_Process | Where-Object {
 ### D. 看启动日志
 
 ```powershell
-Get-Content -LiteralPath 'D:\video_clip\tmp\logs\streamlit_8501.out.log' -Tail 40
-Get-Content -LiteralPath 'D:\video_clip\tmp\logs\streamlit_8501.err.log' -Tail 40
+Get-Content -LiteralPath 'D:\video_clip\logs\streamlit_8501.out.log' -Tail 40
+Get-Content -LiteralPath 'D:\video_clip\logs\streamlit_8501.err.log' -Tail 40
 ```
 
 ## 5. 当前已知异常

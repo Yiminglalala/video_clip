@@ -14,6 +14,8 @@
 
 所有术语定义请参考：[GLOSSARY.md](./GLOSSARY.md)
 
+项目文件与输出目录规范请参考：[OUTPUT_LAYOUT.md](./OUTPUT_LAYOUT.md)
+
 ---
 
 ## 1. 文档目标

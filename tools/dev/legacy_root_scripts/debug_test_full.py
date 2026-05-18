@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """快速调试测试 - 跑一次完整流程看ASR和字幕"""
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
@@ -10,7 +10,7 @@ TEST_VIDEO = r"D:\video_clip\test_video_60s_final.mp4"
 
 
 def screenshot(page, name):
-    path = os.path.join(r"D:\video_clip\output\playwright", f"debug_e2e_{name}.png")
+    path = os.path.join(r"D:\video_clip\output\qa\playwright", f"debug_e2e_{name}.png")
     page.screenshot(path=path)
     print(f"  [截图] {path}")
     return path

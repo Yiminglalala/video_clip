@@ -61,8 +61,10 @@ def test_doubao_api(media_path):
     
     # 初始化豆包API
     print("初始化豆包API...")
-    appid = "6118416182"
-    access_token = "wgYVCSXYek6ATuLNP_DiXFNHZ9jo5ZRV"
+    appid = os.environ.get("DOUBAO_APPID", "")
+    access_token = os.environ.get("DOUBAO_ACCESS_TOKEN", "")
+    if not appid or not access_token:
+        raise RuntimeError("请先设置 DOUBAO_APPID 和 DOUBAO_ACCESS_TOKEN")
     doubao = DoubaoASR(appid=appid, access_token=access_token)
     
     # 将音频转换为WAV格式

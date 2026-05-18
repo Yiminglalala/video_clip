@@ -23,6 +23,13 @@ from src.temp_manager import get_temp_manager
 from src.runtime_config import get_doubao_credentials, get_runtime_config_path
 from src.slicing_ui import build_slicing_processing_config, detect_songformer_device
 from src.path_utils import normalize_pasted_local_path
+from src.project_paths import (
+    PROJECT_ROOT as PROJECT_ROOT_PATH,
+    SUBTITLE_OUTPUT_DIR,
+    SUBTITLE_PROBE_DIR,
+    VIDEO_OUTPUT_DIR,
+    ensure_project_dirs,
+)
 from src.slicing_preview import build_preview_cache_key, generate_segment_preview
 from src.slicing_state import (
     apply_segment_edit as apply_segment_edit_state,
@@ -55,15 +62,15 @@ from src.output_spec import (
 warnings.filterwarnings("ignore")
 
 # 项目根目录加入 path
-PROJECT_ROOT = r"D:\video_clip"
+PROJECT_ROOT = str(PROJECT_ROOT_PATH)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 BACKUP_ROOT = os.path.join(PROJECT_ROOT, "backup_project")
 if BACKUP_ROOT not in sys.path:
     sys.path.append(BACKUP_ROOT)
 
-# 确保输出目录存在
-os.makedirs(os.path.join(PROJECT_ROOT, "output"), exist_ok=True)
+# 确保标准输出目录存在
+ensure_project_dirs()
 
 # 初始化临时文件管理器
 temp_manager = get_temp_manager()
@@ -118,7 +125,7 @@ def init_session_state():
     defaults = {
         "preprocessing": True,             # 是否预处理
         "subtitle_mode": "sentence",       # word | sentence
-        "output_dir": os.path.join(PROJECT_ROOT, "output"),
+        "output_dir": str(VIDEO_OUTPUT_DIR),
         "last_result": None,               # 上次处理结果
         "processing": False,
         "process_logs": [],
@@ -129,6 +136,9 @@ def init_session_state():
     for key, val in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = val
+    legacy_output_dir = os.path.join(PROJECT_ROOT, "output")
+    if st.session_state.get("output_dir") == legacy_output_dir:
+        st.session_state.output_dir = str(VIDEO_OUTPUT_DIR)
 
 
 # ============================================================
@@ -2080,7 +2090,8 @@ def render_subtitle_mode():
                 # 生成输出文件名
                 base_name = os.path.splitext(os.path.basename(video_path))[0]
                 output_name = f"{base_name}_subtitled.mp4"
-                output_path = temp_manager.get_cache_path(output_name)
+                SUBTITLE_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+                output_path = str(SUBTITLE_OUTPUT_DIR / output_name)
                 
                 add_log("正在检测视频方向...")
                 orientation = detect_orientation(video_path)
@@ -2113,7 +2124,8 @@ def render_subtitle_mode():
 
                     probe_time = get_first_subtitle_probe_time(asr_result)
                     if probe_time is not None:
-                        probe_frame_path = temp_manager.get_cache_path(f"{base_name}_subtitle_probe.jpg")
+                        SUBTITLE_PROBE_DIR.mkdir(parents=True, exist_ok=True)
+                        probe_frame_path = str(SUBTITLE_PROBE_DIR / f"{base_name}_subtitle_probe.jpg")
                         ok, probe_result = extract_subtitle_probe_frame(output_path, probe_frame_path, probe_time)
                         if ok:
                             add_log(f"字幕可见性抽帧完成: {probe_time:.2f}s")

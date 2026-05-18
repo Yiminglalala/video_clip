@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Tab1 End-to-End Test - Robust version using file upload."""
 import sys
 import time
@@ -6,7 +6,7 @@ import os
 
 TEST_VIDEO = r"D:\video_clip\test_chenchusheng_10min.mp4"
 APP_URL = "http://localhost:8507"
-OUTPUT_DIR = r"D:\video_clip\output\playwright"
+OUTPUT_DIR = r"D:\video_clip\output\qa\playwright"
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 

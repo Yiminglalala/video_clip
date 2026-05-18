@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """极简测试 - 只跑关键步骤"""
 from playwright.sync_api import sync_playwright
@@ -11,7 +11,7 @@ OUTPUT_DIR = r"D:\video_clip\output"
 
 
 def screenshot(page, name):
-    path = os.path.join(r"D:\video_clip\output\playwright", f"test_final_{name}.png")
+    path = os.path.join(r"D:\video_clip\output\qa\playwright", f"test_final_{name}.png")
     page.screenshot(path=path, full_page=True)
     print(f"  [screenshot] {path}")
     return path

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Focused debug: trace exactly what happens at each step."""
 from playwright.sync_api import sync_playwright
 
@@ -12,7 +12,7 @@ with sync_playwright() as p:
     print("=== [1] Open ===")
     page.goto(APP_URL, wait_until="load", timeout=30000)
     page.wait_for_timeout(3000)
-    page.screenshot(path="D:/video_clip/output/playwright/debug_a1_home.png")
+    page.screenshot(path="D:/video_clip/output/qa/playwright/debug_a1_home.png")
 
     print("=== [2] Click tab1 ===")
     tabs = page.query_selector_all("[data-testid='stTab']")
@@ -24,7 +24,7 @@ with sync_playwright() as p:
             t.click()
             print("  Clicked tab1")
     page.wait_for_timeout(2000)
-    page.screenshot(path="D:/video_clip/output/playwright/debug_a2_after_tab_click.png")
+    page.screenshot(path="D:/video_clip/output/qa/playwright/debug_a2_after_tab_click.png")
 
     print("=== [3] Query inputs ===")
     all_inputs = page.query_selector_all("input")
@@ -46,7 +46,7 @@ with sync_playwright() as p:
         inp.fill(TEST_VIDEO)
         page.wait_for_timeout(1000)
         print(f"  Filled: {repr(inp.get_attribute('value') or '')[:50]}")
-        page.screenshot(path="D:/video_clip/output/playwright/debug_a5_after_fill.png")
+        page.screenshot(path="D:/video_clip/output/qa/playwright/debug_a5_after_fill.png")
 
     print("=== [6] Query buttons ===")
     buttons = page.query_selector_all("button")
@@ -67,7 +67,7 @@ with sync_playwright() as p:
     if not clicked:
         print("  NOT FOUND!")
     page.wait_for_timeout(4000)
-    page.screenshot(path="D:/video_clip/output/playwright/debug_a7_after_use_local.png")
+    page.screenshot(path="D:/video_clip/output/qa/playwright/debug_a7_after_use_local.png")
 
     print("=== [8] Check page text ===")
     body_text = page.inner_text("body")

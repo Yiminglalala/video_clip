@@ -48,8 +48,11 @@ def test_full_process(video_path):
     
     # 2. 初始化豆包API
     print("\n=== 2. 初始化豆包API ===")
-    appid = "6118416182"
-    access_token = "wgYVCSXYek6ATuLNP_DiXFNHZ9jo5ZRV"
+    appid = os.environ.get("DOUBAO_APPID", "")
+    access_token = os.environ.get("DOUBAO_ACCESS_TOKEN", "")
+    if not appid or not access_token:
+        print("请先设置 DOUBAO_APPID 和 DOUBAO_ACCESS_TOKEN")
+        return False
     doubao = DoubaoASR(appid=appid, access_token=access_token)
     
     # 3. 调用豆包API进行语音识别

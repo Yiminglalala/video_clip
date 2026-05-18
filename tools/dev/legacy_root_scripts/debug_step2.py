@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Debug step2 page."""
 from playwright.sync_api import sync_playwright
 
@@ -51,7 +51,7 @@ with sync_playwright() as p:
             print("Clicked!")
             break
     page.wait_for_timeout(3000)
-    page.screenshot(path="D:/video_clip/output/playwright/debug_step2.png")
+    page.screenshot(path="D:/video_clip/output/qa/playwright/debug_step2.png")
 
     body = page.inner_text("body")
     print("\n=== All text on step2 page ===")

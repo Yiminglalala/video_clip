@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Debug step1 page content."""
 from playwright.sync_api import sync_playwright
 
@@ -30,7 +30,7 @@ with sync_playwright() as p:
             break
     page.wait_for_timeout(3000)
 
-    page.screenshot(path="D:/video_clip/output/playwright/debug_step1_check.png")
+    page.screenshot(path="D:/video_clip/output/qa/playwright/debug_step1_check.png")
 
     body = page.inner_text("body")
     lines = [l.strip() for l in body.split("\n") if l.strip()]

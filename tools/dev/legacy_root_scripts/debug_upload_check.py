@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Debug file upload failure."""
 from playwright.sync_api import sync_playwright
 
@@ -43,7 +43,7 @@ with sync_playwright() as p:
                     print(f"Upload on input[1] also failed: {e2}")
 
     page.wait_for_timeout(3000)
-    page.screenshot(path="D:/video_clip/output/playwright/debug_upload_check.png")
+    page.screenshot(path="D:/video_clip/output/qa/playwright/debug_upload_check.png")
 
     body = page.inner_text("body")
     if "时长" in body:

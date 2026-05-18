@@ -24,7 +24,7 @@
 | `src/auto_optimizer.py` | 早期自动优化雏形 | 保留，后续标签库校准时升级 |
 | `src/sample_library.py` | 样本库基础 SQLite 实现 | 保留，后续接入当前 Step 3 |
 | `src/lyric_subtitle.py` 中 ACR/Shazam 识曲 | 旧识曲/歌词链路 | 默认禁用，需显式环境变量才可启用 |
-| 根目录 `debug_*.py` / `diagnostic_*.py` / 临时 `test_*.py` | 历史排查脚本，未纳入稳定测试入口 | 不作为发布门禁；后续统一迁移到 `tools/dev/` 或删除 |
+| `tools/dev/legacy_root_scripts/` | 历史排查脚本，未纳入稳定测试入口 | 不作为发布门禁；需要复用时先升级到 `tests/` 或新的 `tools/dev/` 脚本 |
 
 ## 正式测试入口
 
