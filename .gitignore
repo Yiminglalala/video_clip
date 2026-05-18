@@ -74,6 +74,7 @@ temp/
 
 # Backups (handled by Git instead)
 backup_project/
+backups/
 backup_*
 *.bak_*
 *.backup
