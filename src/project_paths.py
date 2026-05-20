@@ -6,13 +6,15 @@ separate folders so new files do not accumulate in the repository root.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_VIDEO_OUTPUT_DIR = Path(r"G:\video_output")
 
 OUTPUT_ROOT = PROJECT_ROOT / "output"
-VIDEO_OUTPUT_DIR = OUTPUT_ROOT / "videos"
+VIDEO_OUTPUT_DIR = Path(os.environ.get("VIDEO_CLIP_VIDEO_OUTPUT_DIR", str(DEFAULT_VIDEO_OUTPUT_DIR)))
 SUBTITLE_OUTPUT_DIR = OUTPUT_ROOT / "subtitles"
 OUTPUT_CACHE_DIR = OUTPUT_ROOT / "cache"
 QA_OUTPUT_DIR = OUTPUT_ROOT / "qa"

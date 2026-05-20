@@ -6,6 +6,29 @@ Corrections, insights, and knowledge gaps captured during development.
 
 ---
 
+## [LRN-20260520-001] correction
+
+**Logged**: 2026-05-20T00:00:00+08:00
+**Priority**: high
+**Status**: pending
+**Area**: backend
+
+### Summary
+修改豆包 ASR 缓存相关逻辑前，必须先检查项目里是否已经存在缓存模块和约定流程，不能直接另写一套重复实现。
+
+### Details
+用户指出“之前好像就是这样的”，本轮复核发现 `src/subtitle_cache.py` 已经存在 `SubtitleCache/get_subtitle_cache`，问题不是没有缓存能力，而是切片主链路没有接入。后续处理类似问题时，应先搜索既有模块、调用点和历史约定，再决定是否补接线或兼容旧数据。
+
+### Suggested Action
+优先复用既有 `SubtitleCache`，在切片主链路增加命中/未命中日志；只有确认旧缓存格式未被覆盖时，再做最小兼容 fallback。
+
+### Metadata
+- Source: user_feedback
+- Related Files: src/subtitle_cache.py, src/processor.py
+- Tags: doubao, asr-cache, reuse-existing-logic
+
+---
+
 ## [LRN-20260515-001] best_practice
 
 **Logged**: 2026-05-15T00:00:00+08:00

@@ -105,3 +105,11 @@ Use `unittest` for current project tests unless `pytest` is explicitly added to 
 **Context**: `Get-Content -Raw` returned `$null` for an empty legacy file, then `.Replace()` was called on the null value.
 **Impact**: Bulk path replacement stopped early; no source files were corrupted.
 **Fix**: Skip zero-length files or coerce null raw content to an empty string before replacement.
+
+## [ERR-20260520-001] start-service-timeout-but-service-listening
+
+**Logged**: 2026-05-20T12:59:00+08:00
+**Priority**: low
+**Context**: `tools/start_service.ps1 -Port 8501` timed out in the tool after 124s, but port inspection showed `8501` listening and `Invoke-WebRequest http://localhost:8501` returned `200`.
+**Impact**: The command looked failed from the runner, while the Streamlit app was actually available.
+**Fix**: After a start-script timeout, verify port/process/HTTP status before retrying or killing processes.

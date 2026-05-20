@@ -1,15 +1,13 @@
 @echo off
+chcp 65001 >nul
+title 演唱会视频智能切片 - 启动服务
+
 cd /d D:\video_clip
 
-:: 停止已有的 Streamlit 进程
-taskkill /f /im streamlit.exe >nul 2>&1
-ping 127.0.0.1 -n 2 >nul
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\start_service.ps1" -Port 8501 -OpenBrowser
 
-:: 后台静默启动（无任何命令框弹出）
-wscript //nologo "%~dp0start_silent.vbs"
-
-:: 等待服务就绪
-ping 127.0.0.1 -n 6 >nul
-
-:: 自动打开浏览器
-start "" "http://localhost:8501"
+if errorlevel 1 (
+    echo.
+    echo 启动失败，请查看 D:\video_clip\logs\streamlit_8501.err.log
+    pause
+)

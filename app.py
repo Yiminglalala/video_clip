@@ -24,6 +24,7 @@ from src.runtime_config import get_doubao_credentials, get_runtime_config_path
 from src.slicing_ui import build_slicing_processing_config, detect_songformer_device
 from src.path_utils import normalize_pasted_local_path
 from src.project_paths import (
+    OUTPUT_CACHE_DIR,
     PROJECT_ROOT as PROJECT_ROOT_PATH,
     SUBTITLE_OUTPUT_DIR,
     SUBTITLE_PROBE_DIR,
@@ -136,8 +137,11 @@ def init_session_state():
     for key, val in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = val
-    legacy_output_dir = os.path.join(PROJECT_ROOT, "output")
-    if st.session_state.get("output_dir") == legacy_output_dir:
+    legacy_output_dirs = {
+        os.path.join(PROJECT_ROOT, "output"),
+        os.path.join(PROJECT_ROOT, "output", "videos"),
+    }
+    if st.session_state.get("output_dir") in legacy_output_dirs:
         st.session_state.output_dir = str(VIDEO_OUTPUT_DIR)
 
 
@@ -720,7 +724,7 @@ def generate_video_with_subtitles(
     """
     import subprocess
     
-    temp_dir = st.session_state.output_dir
+    temp_dir = str(OUTPUT_CACHE_DIR / "subtitle_ass")
     os.makedirs(temp_dir, exist_ok=True)
     fd, ass_path = tempfile.mkstemp(suffix=".ass", dir=temp_dir, prefix="temp_subtitle_")
     os.close(fd)

@@ -18,6 +18,14 @@
 
 ## 2. 推荐启动命令
 
+桌面或资源管理器双击启动：
+
+```powershell
+D:\video_clip\start.bat
+```
+
+这个脚本会自动停止旧的 8501 服务、使用 `venv_gpu` 重启、等待 HTTP `200`，然后打开浏览器。
+
 优先使用 GPU 环境的 Python：
 
 ```powershell

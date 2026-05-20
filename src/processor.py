@@ -40,6 +40,7 @@ from src.audio_analyzer import (
 from src.ffmpeg_processor import FFmpegProcessor
 from src.doubao_api import DoubaoASR, format_result
 from src.runtime_config import get_doubao_credentials
+from src.subtitle_cache import get_subtitle_cache
 from src.output_spec import (
     DEFAULT_LANDSCAPE_RESOLUTION,
     OutputResolutionSpec,
@@ -447,9 +448,13 @@ class LiveVideoProcessor:
             logger.info(f"音频边界（能量谷值）: {len(audio_boundaries)}个 -> {audio_boundaries}")
 
             if progress_callback:
-                progress_callback(0.22, "MSAF音乐结构分析...")
-            msaf_boundaries = self._detect_msaf_boundaries(audio_path, progress_callback)
-            logger.info(f"MSAF 边界（结构分析）: {len(msaf_boundaries)}个 -> {msaf_boundaries}")
+                progress_callback(0.22, "跳过MSAF歌曲边界检测...")
+            # MSAF 识别的是音乐结构变化，不是稳定的歌曲标题边界。
+            # 如果用它拆分歌曲，短区间被过滤后会造成视频大段内容丢失。
+            # SongFormer 仍然负责在整条歌曲范围内做片段级分类。
+            msaf_boundaries: List[float] = []
+            logger.info("MSAF 歌曲边界检测已禁用：使用 OCR 标题边界，否则整条视频作为一首歌。")
+            logger.info(f"MSAF 边界已忽略：{len(msaf_boundaries)} -> {msaf_boundaries}")
 
             if progress_callback:
                 progress_callback(0.30, "合并边界确定歌曲...")
@@ -473,6 +478,7 @@ class LiveVideoProcessor:
                 progress_callback,
                 singer=singer,
                 aed_wav_path=aed_wav_path,
+                source_video_path=video_path,
             )
             logger.info(f"_create_songs 完成，创建了 {len(songs)} 首歌曲")
 
@@ -811,11 +817,11 @@ class LiveVideoProcessor:
         audio_path: str
     ) -> List[Tuple[float, float]]:
         """
-        v3.0 Three-way merge: OCR + Audio Energy + MSAF structure analysis
-        
-        1. OCR boundaries = high-confidence anchors (title screens)
-        2. Audio energy valleys = auxiliary (DISABLED - 误判太多)
-        3. MSAF structure analysis = academic-level auxiliary (Foote etc.)
+        歌曲边界合并。
+
+        默认只把 OCR 标题画面当成自动歌曲边界。
+        音频能量谷值和 MSAF 结构边界只代表结构变化，不代表可靠的歌曲边界；
+        如果直接用于拆歌，短区间过滤后可能导致视频大段内容未被覆盖。
         """
         total_duration = self._get_audio_duration(audio_path)
         
@@ -824,11 +830,13 @@ class LiveVideoProcessor:
         
         # 禁用音频能量谷值边界，避免误判
         # aux_bounds = sorted(set(audio_boundaries + msaf_boundaries))
-        aux_bounds = sorted(set(msaf_boundaries))
-        if aux_bounds:
-            return self._build_songs_from_boundaries(aux_bounds, total_duration)
+        if audio_boundaries or msaf_boundaries:
+            logger.info(
+                "音频/MSAF 边界已忽略，不参与歌曲拆分 "
+                f"(audio={len(audio_boundaries)}, msaf={len(msaf_boundaries)})."
+            )
 
-        logger.warning("OCR/Audio/MSAF all empty -> whole video as one song")
+        logger.warning("未检测到 OCR 标题边界 -> 整条视频作为一首歌")
         return [(0.0, total_duration)]
 
     def _detect_msaf_boundaries(
@@ -1077,6 +1085,74 @@ class LiveVideoProcessor:
         if isinstance(value, np.bool_):
             return bool(value)
         return value
+
+    @staticmethod
+    def _is_usable_asr_result(asr_result: Optional[Dict[str, Any]]) -> bool:
+        if not isinstance(asr_result, dict):
+            return False
+        if asr_result.get("error"):
+            return False
+        return bool(asr_result.get("sentences") or asr_result.get("words") or asr_result.get("text"))
+
+    @staticmethod
+    def _asr_sentence_count(asr_result: Optional[Dict[str, Any]]) -> int:
+        if not isinstance(asr_result, dict):
+            return 0
+        sentences = asr_result.get("sentences") or []
+        return len(sentences) if isinstance(sentences, list) else 0
+
+    @staticmethod
+    def _normalize_cache_compare_path(path: str) -> str:
+        try:
+            return os.path.normcase(str(Path(path).resolve()))
+        except Exception:
+            return os.path.normcase(os.path.abspath(path))
+
+    def _load_persisted_asr_cache(self, video_path: str, song_index: int) -> Optional[Dict[str, Any]]:
+        """Read legacy timestamped ASR cache written by _persist_cached_asr_results."""
+        cache_root = Path(self.config.output_dir) / "asr_cache"
+        if not cache_root.exists():
+            return None
+
+        target_path = self._normalize_cache_compare_path(video_path)
+        try:
+            index_files = sorted(
+                cache_root.glob("*/index.json"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+        except Exception:
+            return None
+
+        for index_file in index_files:
+            try:
+                with open(index_file, "r", encoding="utf-8") as f:
+                    index_payload = json.load(f)
+                cached_video_path = self._normalize_cache_compare_path(str(index_payload.get("video_path") or ""))
+                if cached_video_path != target_path:
+                    continue
+
+                for song_entry in index_payload.get("songs", []) or []:
+                    if int(song_entry.get("song_index", -1)) != int(song_index):
+                        continue
+                    cache_file = index_file.parent / str(song_entry.get("file") or "")
+                    if not cache_file.exists():
+                        continue
+                    with open(cache_file, "r", encoding="utf-8") as f:
+                        payload = json.load(f)
+                    asr_result = payload.get("asr_result")
+                    if self._is_usable_asr_result(asr_result):
+                        logger.info(
+                            "[Doubao] 命中历史ASR缓存: %s song=%s",
+                            index_file.parent,
+                            song_index + 1,
+                        )
+                        return asr_result
+            except Exception as e:
+                logger.warning("[Doubao] 读取历史ASR缓存失败 %s: %s", index_file, e)
+                continue
+
+        return None
 
     def _persist_cached_asr_results(self, video_path: str, songs: List[SongInfo]) -> Optional[str]:
         """Persist Doubao ASR cache for debugging and deterministic boundary review."""
@@ -2848,6 +2924,7 @@ class LiveVideoProcessor:
         progress_callback=None,
         singer: Optional[str] = None,
         aed_wav_path: Optional[str] = None,
+        source_video_path: Optional[str] = None,
     ) -> List[SongInfo]:
         """
         创建歌曲结构，并对每首歌进行音频分析
@@ -3132,13 +3209,77 @@ class LiveVideoProcessor:
             # ── 字幕 + 歌名识别 ──
             if self.config.enable_subtitle and song.duration > 10:
                 try:
-                    # 对完整歌曲调豆包ASR，缓存结果供export复用
                     song_start = float(song.start_time)
                     song_end = float(song.end_time)
-                    full_audio = y_full[int(song_start * sr):int(song_end * sr)]
-                    asr_result = self._run_doubao_asr(full_audio, sr)
+                    cache_video_path = source_video_path or audio_path
+                    if progress_callback and total_songs > 0:
+                        progress_callback(
+                            0.50,
+                            f"[字幕 {idx+1}/{total_songs}] 检查豆包ASR缓存..."
+                        )
+
+                    subtitle_cache = get_subtitle_cache()
+                    asr_result = subtitle_cache.get_cached_subtitle(
+                        cache_video_path,
+                        song_index=idx,
+                        language="zh-CN",
+                        caption_type="auto",
+                    )
+                    cache_hit_label = "命中缓存"
+                    if not self._is_usable_asr_result(asr_result):
+                        asr_result = self._load_persisted_asr_cache(cache_video_path, idx)
+                        if self._is_usable_asr_result(asr_result):
+                            cache_hit_label = "命中历史ASR缓存"
+                            subtitle_cache.save_subtitle(
+                                cache_video_path,
+                                asr_result,
+                                song_index=idx,
+                                language="zh-CN",
+                                caption_type="auto",
+                            )
+
+                    if self._is_usable_asr_result(asr_result):
+                        if progress_callback and total_songs > 0:
+                            progress_callback(
+                                0.50,
+                                f"[字幕 {idx+1}/{total_songs}] {cache_hit_label}，跳过豆包API "
+                                f"({self._asr_sentence_count(asr_result)}句)"
+                            )
+                        logger.info(f"[Doubao] 歌曲{idx+1} 命中字幕缓存，跳过API调用")
+                    else:
+                        if progress_callback and total_songs > 0:
+                            progress_callback(
+                                0.50,
+                                f"[字幕 {idx+1}/{total_songs}] 未命中缓存，调用豆包API识别..."
+                            )
+                        # 对完整歌曲调豆包ASR，缓存结果供export复用
+                        full_audio = y_full[int(song_start * sr):int(song_end * sr)]
+                        asr_result = self._run_doubao_asr(full_audio, sr)
+                        if self._is_usable_asr_result(asr_result):
+                            subtitle_cache.save_subtitle(
+                                cache_video_path,
+                                asr_result,
+                                song_index=idx,
+                                language="zh-CN",
+                                caption_type="auto",
+                            )
+                            if progress_callback and total_songs > 0:
+                                progress_callback(
+                                    0.50,
+                                    f"[字幕 {idx+1}/{total_songs}] 豆包ASR完成并写入缓存 "
+                                    f"({self._asr_sentence_count(asr_result)}句)"
+                                )
+                        else:
+                            if not isinstance(asr_result, dict):
+                                asr_result = {"error": "豆包ASR未返回有效字典结果"}
+                            error_msg = str((asr_result or {}).get("error") or "无有效字幕")
+                            if progress_callback and total_songs > 0:
+                                progress_callback(
+                                    0.50,
+                                    f"[字幕 {idx+1}/{total_songs}] 豆包ASR无有效结果: {error_msg}"
+                                )
                     self._cached_asr_results[idx] = asr_result
-                    logger.info(f"[Doubao] 歌曲{idx+1} ASR完成: {len(asr_result.get('sentences', []))}句")
+                    logger.info(f"[Doubao] 歌曲{idx+1} ASR完成: {self._asr_sentence_count(asr_result)}句")
 
                     # 用歌词+歌手匹配歌名
                     lyrics = asr_result.get("text", "").strip()
